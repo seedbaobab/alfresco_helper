@@ -18,8 +18,8 @@ class Controller:
         Initialize a new instance of 'Controller' class.
         :param name: Controller name.
         """
-        self.__NAME: str = name
-        self._VIEW: View = view
+        self._name: str = name
+        self._view: View = view
         self._service: Service = service
 
     @property
@@ -28,7 +28,7 @@ class Controller:
         Getter of the class instance value __NAME.
         :return: The class instance value __NAME.
         """
-        return self.__NAME
+        return self._name
 
     def get_man(self, command: str) -> list[ManualModel] | ManualModel:
         """
@@ -54,8 +54,8 @@ class Controller:
         if command is None:
             manuals: list[ManualModel] = self._service.man()
             for man in manuals:
-                self._VIEW.manual(man.to_str())
-        elif self._service.is_command_exists("{0}_{1}".format(command, self.__NAME)):
-            self._VIEW.manual(self._service.man(command).to_str())
+                self._view.manual(man.to_str())
+        elif self._service.is_command_exists("{0}_{1}".format(command, self._name)):
+            self._view.manual(self._service.man(command).to_str())
         else:
-            raise ApiException("Command '{0}_{1}' does not exist".format(command, self.__NAME))
+            raise ApiException("Command '{0}_{1}' does not exist".format(command, self._name))
