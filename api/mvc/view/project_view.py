@@ -18,14 +18,14 @@ class ProjectView(View):
         Retrieves the value of the SDK to use to generate an Alfresco All-In-One project.
         :return: The value of the SDK to use to generate an Alfresco All-In-One project.
         """
-        return self.get_input("Please enter the sdk version to use for your Alfresco All-In-One project")
+        return self.get_input("Please enter the SDK version to use for your Alfresco All-In-One project")
 
     def __get_group_id(self) -> str:
         """
         Retrieves the value of the group id to use to generate an Alfresco All-In-One project.
         :return: The value of the group id to use to generate an Alfresco All-In-One project.
         """
-        return self.get_input("Please enter the group id value of your Alfresco All-In-One project")
+        return self.get_input("Please enter the group-id value of your Alfresco All-In-One project")
 
     def __get_artifact_id(self) -> str:
         """
