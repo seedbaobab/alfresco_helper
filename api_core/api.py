@@ -1,7 +1,9 @@
-import os
 from abc import ABC, abstractmethod
 
+from api_core.exception.api_exception import ApiException
 from api_core.helper.constant_helper import ConstantHelper
+from api_core.mvc.controller.controller import Controller
+from api_core.mvc.service.model.controller_service import ControllerService
 from api_core.mvc.view.view import View
 
 
@@ -18,49 +20,30 @@ class Api(ABC):
         """
         # The API name.
         self._NAME: str = api_name
-        #
-        self._SERVICE: ControllerService = ControllerService()
-
-        self.view: View = View(ConstantHelper.SCREEN_SIZE)
+        # The API services controller.
+        self.__service: ControllerService = ControllerService()
+        # The API view.
+        self.__view: View = View(ConstantHelper.SCREEN_SIZE)
+        # The full path to the API.
 
         # Initialization of application controllers.
         self.init_controllers()
 
     @property
-    def data_folder_path(self) -> str:
+    def view(self) -> View:
         """
-        Access method to instance property '_DATA_FOLDER_PATH'.
-        :return: The value of the '_DATA_FOLDER_PATH' instance property.
+        Access method to instance property '__view'.
+        :return: The value of the '__view' instance property.
         """
-        return self._DATA_FOLDER_PATH
-
-    @property
-    def licence_folder_path(self) -> str:
-        """
-        Access method to instance property '_LICENCE_FOLDER_PATH'.
-        :return: The value of the '_LICENCE_FOLDER_PATH' instance property.
-        """
-        return self._LICENCE_FOLDER_PATH
-
-    @property
-    def template_folder_path(self) -> str:
-        return self._TEMPLATE_FOLDER_PATH
-
-    @property
-    def resources_folder_path(self) -> str:
-        """
-        Access method to instance property '_RESOURCES_FOLDER_PATH'.
-        :return: The value of the '_RESOURCES_FOLDER_PATH' instance property.
-        """
-        return self._RESOURCES_FOLDER_PATH
+        return self.__view
 
     @property
     def service(self) -> ControllerService:
         """
-        Access method to instance property '_SERVICE'.
-        :return: The value of the '_SERVICE' instance property.
+        Access method to instance property '__service'.
+        :return: The value of the '__service' instance property.
         """
-        return self._SERVICE
+        return self.__service
 
     @abstractmethod
     def init_controllers(self):
@@ -74,13 +57,13 @@ class Api(ABC):
         Interprets a list of tokens.
         :param tokens: The list of tokens to interpret.
         """
-        self.view.main_title(self._NAME)
+        self.__view.main_title(self._NAME)
         try:
             (controller, command, arguments) = self.__extract_token_datas(tokens)
             self._execute(controller, command, arguments)
         except ApiException as e1:
-            self.view.exception(e1)
-        self.view.end_title(self._NAME)
+            self.__view.exception(e1)
+        self.__view.end_title(self._NAME)
 
     @abstractmethod
     def _execute(self, controller: str, command: str, arguments: list[str]):
@@ -99,10 +82,10 @@ class Api(ABC):
             # Data extraction.
             (controller_name, command, arguments) = (tokens[0].rsplit("_")[1], tokens[0].rsplit("_")[0], tokens[1:])
             # Checking the existence of the controller.
-            if not self._SERVICE.exists(controller_name):
+            if not self.__service.exists(controller_name):
                 raise ApiException("'{0}' is not a valid command.".format(" ".join(tokens)))
             # Verification of the validity of the command.
-            controller: Controller = self._SERVICE.get(controller_name)
+            controller: Controller = self.__service.get(controller_name)
             if not controller.is_command_valid(command, arguments):
                 raise ApiException("The '{1}_{0}' command was not called correctly. Here is the manual for it:"
                                    .format(controller_name, command), controller.get_man(command))

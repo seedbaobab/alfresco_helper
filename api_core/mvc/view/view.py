@@ -151,7 +151,7 @@ class View:
         :param character: The character that fill the line.
         :return: A line filled with the character in parameter.
         """
-        return "*{0}*".format(character * (self.__width - 2))
+        return "|{0}|".format(character * (self.__width - 2))
 
     def __split_in_lines(self, message: str):
         """

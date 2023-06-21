@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class StringHelper:
     """
     Helper class for String.
@@ -28,4 +31,3 @@ class StringHelper:
     @staticmethod
     def to_camel_case(value: str) -> str:
         return sub(r"(_|-)+", " ", value).title().replace(" ", "")
-
