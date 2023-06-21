@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from api_core.mvc.service.data.manual_model import ManualModel
+from api_core.mvc.service.model.manual_service import ManualService
 
 
 class Service(ABC):
