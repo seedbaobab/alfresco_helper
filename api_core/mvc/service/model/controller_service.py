@@ -10,7 +10,7 @@ class ControllerService:
         """
         Initialize a new instance of 'ControllerService' class.
         """
-        self.__CONTROLLERS: dict[str, Controller] = {}
+        self.__controllers: dict[str, Controller] = {}
 
     def exists(self, name: str) -> bool:
         """
@@ -18,14 +18,14 @@ class ControllerService:
         :param name: The name of the controller.
         :return:
         """
-        return name in self.__CONTROLLERS.keys()
+        return name in self.__controllers.keys()
 
     def add(self, controller: Controller):
         """
         Add a controller in the service.
         :param controller: The controller to add.
         """
-        self.__CONTROLLERS[controller.name] = controller
+        self.__controllers[controller.name] = controller
 
     def get(self, name: str) -> Controller:
         """
@@ -33,4 +33,4 @@ class ControllerService:
         :param name: The name of the controller.
         :return: The controller referenced by name.
         """
-        return self.__CONTROLLERS.get(name)
+        return self.__controllers.get(name)
