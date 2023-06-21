@@ -5,16 +5,16 @@ class MessageType(Enum):
     """
     Enumeration for available message types.
     """
-    DEBUG: str = "DEBUG",
-    INFO: str = "INFO",
-    SUB_INFO: str = "  INFO    ->",
-    WARN: str = "WARNING",
-    ERROR: str = "ERROR",
-    INPUT: str = "INPUT",
-    SUCCESS: str = "SUCCESS",
-    SUB_SUCCESS: str = "  SUCCESS ->",
-    MANUAL: str = "MANUAL",
-    START: str = "START",
+    DEBUG: str = "DEBUG"
+    INFO: str = "INFO"
+    SUB_INFO: str = "  INFO    ->"
+    WARN: str = "WARNING"
+    ERROR: str = "ERROR"
+    INPUT: str = "INPUT"
+    SUCCESS: str = "SUCCESS"
+    SUB_SUCCESS: str = "  SUCCESS ->"
+    MANUAL: str = "MANUAL"
+    START: str = "START"
     END: str = "END"
 
     @staticmethod
