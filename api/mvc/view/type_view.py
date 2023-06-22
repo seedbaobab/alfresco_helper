@@ -1,31 +1,31 @@
 from api_core.mvc.view.view import View
 
 
-class AspectView(View):
+class TypeView(View):
     """
-    View for the aspect controller.
+    View for the type controller.
     """
 
     def __get_name(self) -> str:
         """
-        Retrieves the name of the aspect to use to generate an aspect.
-        :return: The name of the aspect to use to generate an aspect.
+        Retrieves the name of the aspect to use to generate a type.
+        :return: The name of the aspect to use to generate a type.
         """
-        return self.get_input("Please enter the name value of your aspect")
+        return self.get_input("Please enter the name value of your type")
 
     def __get_title(self) -> str:
         """
-        Retrieves the value of the title to use to generate an aspect.
-        :return: The value of the title to use to generate an aspect.
+        Retrieves the value of the title to use to generate a type.
+        :return: The value of the title to use to generate a type.
         """
-        return self.get_input("Please enter the title value of your aspect")
+        return self.get_input("Please enter the title value of your type")
 
     def __get_description(self) -> str:
         """
         Retrieves the value of the description to use to generate a description.
         :return: The value of the description to use to generate a description.
         """
-        return self.get_input("Please enter the description value of your aspect")
+        return self.get_input("Please enter the description value of your type")
 
     def enter_aspect_data(self) -> tuple[str, str, str]:
         """
