@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
-from typing import Optional
 
+from api.mvc.model.data.content_model import ContentModel
 from api.mvc.model.data.project_model import ProjectModel
 
 

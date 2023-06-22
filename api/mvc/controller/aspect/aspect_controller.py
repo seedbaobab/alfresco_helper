@@ -49,5 +49,4 @@ class AspectController(Controller):
                                .format(name, content_model.complete_name))
 
         service.new(content_model, name, title, description)
-
         view.success("Aspect '{0}' was successfully created in content model '{1}'.".format(name, content_model_name))
