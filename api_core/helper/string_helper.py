@@ -31,3 +31,8 @@ class StringHelper:
     @staticmethod
     def to_camel_case(value: str) -> str:
         return sub(r"(_|-)+", " ", value).title().replace(" ", "")
+
+    @staticmethod
+    def to_snake_case(value: str) -> str:
+        filename: str = re.sub('([A-Z]{1})', r'-\1', value).lower()
+        return "{0}-model".format(filename)

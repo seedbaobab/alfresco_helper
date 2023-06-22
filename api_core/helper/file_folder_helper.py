@@ -9,13 +9,17 @@ class FileFolderHelper:
     """
 
     @staticmethod
-    def extract_file_folder_path(filepath: str) -> str:
+    def extract_folder_from_filepath(filepath: str) -> str:
         """
         Extract the path to the file folder.
         :param filepath: The path to the file.
         :return: The path to the file folder.
         """
         return filepath.rsplit(os.sep, 1)[0]
+
+    @staticmethod
+    def extract_filename_from_path(filepath: str) -> str:
+        return filepath.rsplit(os.sep, 1)[1]
 
     @staticmethod
     def is_file_exists(file_path: str) -> bool:

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="{prefix}:{name}" xmlns="http://www.alfresco.org/model/dictionary/1.0">
+
+    <!-- Optional meta-data about the model -->
+    <description>TODO: SET THE PROJECT DESCRIPTION </description>
+    <author>Alfresco Helper Script 1.0.0</author>
+    <version>1.0</version>
+
+    <imports>
+        <!-- Import Alfresco Dictionary Definitions -->
+        <import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d"/>
+        <!-- Import Alfresco Content Domain Model Definitions -->
+        <import uri="http://www.alfresco.org/model/content/1.0" prefix="cm"/>
+    </imports>
+
+    <!-- Custom namespace for the {upper_case_name} model -->
+    <namespaces>
+        <namespace uri="http://www.{name}.org/model/content/1.0" prefix="{prefix}"/>
+    </namespaces>
+
+</model>

@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+
+   <!-- The bootstrap-context.xml file is used for patch definitions, importers,
+		 workflow, and loading custom content models.  -->
+
+   <bean id="{artifact_id}.dictionaryBootstrap" parent="dictionaryModelBootstrap" depends-on="dictionaryBootstrap">
+
+      <!-- Registration of new models -->
+      <property name="models">
+         <list>
+         </list>
+      </property>
+
+      <!-- Models label registration -->
+      <property name="labels">
+         <list>
+         </list>
+      </property>
+
+   </bean>
+</beans>

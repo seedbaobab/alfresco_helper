@@ -2,3 +2,7 @@
 ## Objectif
 Le but de ce développement est de faciliter le développement de projets all-in-one (AIO) alfresco. 
 En passant des actions basiques (création de modèle de contenus, aspect, types, ...) jusqu'à des plus complexes (tel que l'ajout d'actions, ...)
+## Avancement
+Création d'un nouveau projet : **OK**<br/>
+Création d'un nouveau content-model : **OK**<br/>
+Création d'un nouvel aspect : **WIK**<br/>

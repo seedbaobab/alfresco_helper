@@ -1,3 +1,4 @@
+import os
 from abc import ABC, abstractmethod
 
 from api_core.exception.api_exception import ApiException
@@ -24,10 +25,24 @@ class Api(ABC):
         self.__service: ControllerService = ControllerService()
         # The API view.
         self.__view: View = View(ConstantHelper.SCREEN_SIZE)
-        # The full path to the API.
+        # The absolute path to the API folder.
+        self.__api_folder: str = path_to_api_folder
+
+        # Path to the resource's folder.
+        self.__resources_folder: str = "{0}{1}api{1}{2}".format(path_to_api_folder, os.sep, "resources")
+        # Path to the template's folder.
+        self.__template_folder: str = "{0}{1}{2}".format(self.__resources_folder, os.sep, "template")
 
         # Initialization of application controllers.
         self.init_controllers()
+
+    @property
+    def template_folder(self) -> str:
+        """
+        Access method to instance property '__view'.
+        :return: The value of the '__view' instance property.
+        """
+        return self.__template_folder
 
     @property
     def view(self) -> View:
@@ -44,6 +59,14 @@ class Api(ABC):
         :return: The value of the '__service' instance property.
         """
         return self.__service
+
+    @property
+    def api_folder(self) -> str:
+        """
+        Access method to instance property '__api_folder'.
+        :return: The value of the '__api_folder' instance property.
+        """
+        return self.__api_folder
 
     @abstractmethod
     def init_controllers(self):

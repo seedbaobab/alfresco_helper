@@ -1,0 +1,4 @@
+http_host:proxy.intranet.cg59.fr
+http_port:8080
+https_host:proxy.intranet.cg59.fr
+https_port:8080

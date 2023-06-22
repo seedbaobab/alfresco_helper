@@ -1,15 +1,21 @@
+import os
 import re
+from typing import Optional
 
-from api.mvc.model.service.project_service import ProjectService
+from api.mvc.controller.project.i_project_controller import IProjectController
+from api.mvc.model.data.project_model import ProjectModel
+from api.mvc.model.service.data.project_service import ProjectService
+from api.mvc.model.service.file.pom_service import PomService
 
 from api.mvc.view.project_view import ProjectView
 from api_core.exception.api_exception import ApiException
 from api_core.helper.constant_helper import ConstantHelper
+from api_core.helper.file_folder_helper import FileFolderHelper
 from api_core.helper.string_helper import StringHelper
 from api_core.mvc.controller.controller import Controller
 
 
-class ProjectController(Controller):
+class ProjectController(Controller, IProjectController):
     """
     Controller class used to manage API projects.
     """
@@ -19,6 +25,7 @@ class ProjectController(Controller):
         Initialize a new instance of ProjectController class.
         """
         super().__init__("project", ProjectService(), ProjectView(ConstantHelper.SCREEN_SIZE))
+        self.__ps: PomService = PomService()
 
     def new(self):
         """
@@ -51,6 +58,27 @@ class ProjectController(Controller):
 
         self._view.success("Alfresco All-In-one project '{0}.{1}' created with SDK version {2}."
                            .format(group_id, artifact_id, sdk))
+
+    def get_project(self, artifact_id: Optional[str] = None) -> ProjectModel:
+        """
+        Retrieves the data model of an Alfresco AIO project.
+        :param artifact_id: The artifact id of the Alfresco AIO project.
+        :return: The data model of an Alfresco AIO project.
+        """
+        self._view.info("Retrieving the project data model.")
+        project_path: str = os.getcwd() if artifact_id is None else "{1}{0}{2}".format(os.sep, os.getcwd(), artifact_id)
+        pom_path: str = "{1}{0}pom.xml".format(os.sep, project_path)
+
+        # Verification that the project folder exists.
+        if not FileFolderHelper.is_folder_exists(project_path):
+            raise ApiException("The AIO project folder does not exist.")
+
+        # Verification that the folder contains a pom.xml file.
+        elif not FileFolderHelper.is_file_exists(pom_path):
+            raise ApiException("The working directory is not an Alfresco project folder.")
+
+        return ProjectModel(self.__ps.extract_sdk(pom_path), self.__ps.extract_group_id(pom_path),
+                            self.__ps.extract_artifact_id(pom_path), project_path)
 
     @staticmethod
     def __check_sdk(value: str):
@@ -103,7 +131,7 @@ class ProjectController(Controller):
         elif StringHelper.has_space(value):
             raise ApiException("The artifact id of the AIO project cannot contain spaces.")
 
-        # Check if it has the good version.
+        # Check that there are no special characters.
         elif re.match("[a-z0-9\-]+$", value) is None:
             raise ApiException("The AIO project artifact ID cannot contain special characters or upper case (example "
                                "of a valid artifact id name: 'display-of-acts').")
