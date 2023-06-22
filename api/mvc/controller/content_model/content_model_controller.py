@@ -121,7 +121,7 @@ class ContentModelController(Controller, IContentModelController, ABC):
         # Check that there are no special characters.
         elif re.match("[a-z0-9]+$", value) is None:
             raise ApiException("The content model prefix cannot contain any special or uppercase characters."
-                               " (example of a valid content-model prefix: 'agt').")
+                               " (example of a valid content-model prefix: 'acme').")
 
     @staticmethod
     def __format_author(last_name: str, firstname: str) -> Optional[str]:
@@ -156,9 +156,9 @@ class ContentModelController(Controller, IContentModelController, ABC):
             raise ApiException("The content model name cannot contain spaces.")
 
         # Check that there are no special characters.
-        elif re.match("[a-z0-9]+$", value) is None:
-            raise ApiException("The content model name cannot contain any special or uppercase characters."
-                               " (example of a valid content-model name: 'agent').")
+        elif re.match("[a-zA-Z0-9]+$", value) is None:
+            raise ApiException("The content model name cannot contain any special"
+                               " (example of a valid content-model name: 'contentModel').")
 
     def __extract_name(self, content_model: str) -> str:
         """
