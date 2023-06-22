@@ -1,4 +1,3 @@
-import os
 from xml.etree.ElementTree import Element
 
 from api_core.exception.api_exception import ApiException
@@ -15,7 +14,7 @@ class PomService(XmlFileService):
         """
         Initialize a new instance of 'PomService' class.
         """
-        super().__init__("http://maven.apache.org/POM/4.0.0")
+        super().__init__(True, {"xmlns": "http://maven.apache.org/POM/4.0.0"})
 
     def extract_sdk(self, pom_path: str) -> str:
         """
@@ -24,9 +23,7 @@ class PomService(XmlFileService):
         :return: The value of the 'alfresco.sdk.version' node.
         """
         root: Element = self._get_root(pom_path)
-        xmlns: str = self._extract_xmlns(root)
-
-        node: Element = root.find(".//{0}properties/{0}alfresco.sdk.version".format(xmlns))
+        node: Element = root.find(".//{0}properties/{0}alfresco.sdk.version".format(self.get_namespace("xmlns")))
 
         # Verification that the node is not empty.
         if node is None:
@@ -46,9 +43,7 @@ class PomService(XmlFileService):
         :return: The value of the 'groupId' node.
         """
         root: Element = self._get_root(pom_path)
-        xmlns: str = self._extract_xmlns(root)
-
-        node: Element = root.find(".//{0}groupId".format(xmlns))
+        node: Element = root.find(".//{0}groupId".format(self.get_namespace("xmlns")))
 
         # Verification that the node is not empty.
         if node is None:
@@ -68,9 +63,7 @@ class PomService(XmlFileService):
         :return: The value of the 'artifactId' node.
         """
         root: Element = self._get_root(pom_path)
-        xmlns: str = self._extract_xmlns(root)
-
-        node: Element = root.find(".//{0}artifactId".format(xmlns))
+        node: Element = root.find(".//{0}artifactId".format(self.get_namespace("xmlns")))
         # Verification that the node is not empty.
         if node is None:
             raise ApiException("The pom file does not contain any 'artifactId' node.")

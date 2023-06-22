@@ -36,8 +36,6 @@ class ContentModelService(Service, ABC):
 
         return ContentModel(prefix, name, filepath)
 
-
-
     def is_prefix_exists(self, project: ProjectModel, prefix: str) -> tuple[bool, Optional[str]]:
         """
         Checks if the prefix is already present in a content model definition file. It returns a tuple composed of a
@@ -54,7 +52,7 @@ class ContentModelService(Service, ABC):
         maximum: int = len(contents)
 
         while index.__lt__(maximum) and cm_name is None:
-            if self.__cmfs.extract_prefix("{1}{0}{2}".format(os.sep, project.content_model_folder, contents[index]))\
+            if self.__cmfs.extract_prefix("{1}{0}{2}".format(os.sep, project.content_model_folder, contents[index])) \
                     .__eq__(prefix):
                 cm_name = contents[index]
             else:

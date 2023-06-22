@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from xml.dom import minidom
+from typing import Optional
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
 from api_core.exception.api_exception import ApiException
-from api_core.helper.string_helper import StringHelper
 
 
 class XmlFileService:
@@ -13,12 +12,22 @@ class XmlFileService:
     Service class for managing XML files.
     """
 
-    def __init__(self, namespace: str | None):
+    def __init__(self, use_xml_declaration: bool, namespaces: Optional[dict[str, str]]):
         """
         Initialize a new instance of 'XmlFileService' class.
-        :param namespace: The XML namespace.
+        :type use_xml_declaration: Indicates whether the file must declare its version of XML.
+        :param namespaces: The XML namespace.
         """
-        self.namespace: str | None = namespace
+        self.__indent: str = "   "
+        self.__use_xml_declaration: bool = use_xml_declaration
+        self.__namespaces: Optional[dict[str, str]] = namespaces
+
+    @property
+    def namespaces(self) -> Optional[list[tuple[str, str]]]:
+        return None if self.__namespaces is None else self.__namespaces.items()
+
+    def get_namespace(self, prefix: str):
+        return "{" + self.__namespaces[prefix] + "}"
 
     @staticmethod
     def clean_blank_line(xml_path: str):
@@ -35,12 +44,10 @@ class XmlFileService:
         with open(xml_path, "w") as writer:
             writer.write(buffer)
 
-    @staticmethod
-    def _write_xml_pretty(root: Element, path: str, xml_declaration: bool):
-        xml_str = minidom.parseString(ElementTree.tostring(root, xml_declaration=xml_declaration)). \
-            toprettyxml(indent="   ")
-        with open(path, "wb") as f:
-            f.write(xml_str.encode('utf-8'))
+    def _write(self, root: Element, path: str):
+        tree = ElementTree.ElementTree(root)
+        ElementTree.indent(tree, self.__indent)
+        tree.write(path, encoding="utf-8", xml_declaration=self.__use_xml_declaration)
 
     @staticmethod
     def _extract_xmlns(pom_root: Element) -> str:
@@ -59,7 +66,8 @@ class XmlFileService:
         :param xml_file_path: Path to the xml file.
         :return: The xml root node.
         """
-        if not StringHelper.is_empty(self.namespace):
-            ElementTree.register_namespace('', self.namespace)
+        if self.__namespaces is not None:
+            for item in self.__namespaces.items():
+                ElementTree.register_namespace('', item[1])
         # Return the xml root node.
         return ElementTree.parse(xml_file_path).getroot()
