@@ -22,16 +22,21 @@ class ContentModelService(Service, ABC):
         self.__cmfs: ContentModelFileService = ContentModelFileService()
         self.__content_model_template_filepath: str = "{0}{1}content_model_template".format(api_template_folder, os.sep)
 
-    def new(self, project: ProjectModel, prefix: str, name: str) -> ContentModel:
+    def new(self, project: ProjectModel, prefix: str, name: str, description: Optional[str], author: Optional[str]) \
+            -> ContentModel:
         # Setting the absolute path to the content model file.
         filepath: str = "{0}{1}{2}".format(project.content_model_folder, os.sep,
                                            "{0}.xml".format(name) if name.endswith("model") else
                                            "{0}-model.xml".format(name))
 
-        FileFolderHelper.write_file(filepath, FileFolderHelper.read_file(self.__content_model_template_filepath)
-                                    .format(prefix=prefix, name=name, upper_case_name=name.upper()))
+        # FileFolderHelper.write_file(filepath, FileFolderHelper.read_file(self.__content_model_template_filepath)
+        #                             .format(prefix=prefix, name=name, upper_case_name=name.upper()))
+
+        self.__cmfs.create_content_model(filepath, prefix, name, description, author)
 
         return ContentModel(prefix, name, filepath)
+
+
 
     def is_prefix_exists(self, project: ProjectModel, prefix: str) -> tuple[bool, Optional[str]]:
         """

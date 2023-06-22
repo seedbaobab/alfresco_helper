@@ -44,7 +44,7 @@ class ContentModelController(Controller, IContentModelController, ABC):
         project: ProjectModel = self.__pc.get_project()
 
         vw.info("Create of a content model.")
-        (prefix, name) = vw.enter_content_model_data()
+        (prefix, name, description, last_name, first_name) = vw.enter_content_model_data()
 
         # Verification of the validity of the prefix.
         self.__check_prefix(prefix)
@@ -59,7 +59,8 @@ class ContentModelController(Controller, IContentModelController, ABC):
             raise ApiException("The name is already used in the content model file '{0}'.".format(cm_file))
 
         # Creation of the content model.
-        content_model: ContentModel = service.new(project, prefix, name)
+        content_model: ContentModel = service.new(project, prefix, name, description,
+                                                  self.__format_author(last_name, first_name))
 
         vw.success("The content model '{0}' has been created successfully in '{1}'."
                    .format(content_model.complete_name,
@@ -121,6 +122,24 @@ class ContentModelController(Controller, IContentModelController, ABC):
         elif re.match("[a-z0-9]+$", value) is None:
             raise ApiException("The content model prefix cannot contain any special or uppercase characters."
                                " (example of a valid content-model prefix: 'agt').")
+
+    @staticmethod
+    def __format_author(last_name: str, firstname: str) -> Optional[str]:
+        """
+        Format data about the author of the content model.
+        :param last_name: The author's last name.
+        :param firstname: The author's first name.
+        :return: The author's name formatted.
+        """
+        result: Optional[str] = None
+        if not StringHelper.is_empty(last_name):
+            result = last_name.upper()
+        if not StringHelper.is_empty(firstname):
+            if result is not None:
+                result += " {0}".format(firstname.title())
+            else:
+                result = firstname.title()
+        return result
 
     @staticmethod
     def __check_name(value: str):
