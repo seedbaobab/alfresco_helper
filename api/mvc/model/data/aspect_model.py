@@ -20,5 +20,5 @@ class AspectModel(DataModel):
         """
         super().__init__(name, title, description, DataType.ASPECT)
 
-        self.parent: Optional[AspectModel] = None
-        self.mandatory: list[AspectModel] = []
+        self.parent = None
+        self.mandatory = []

@@ -28,7 +28,7 @@ class AspectController(Controller):
 
     def new(self, content_model_name: str):
         """
-        Attempts to create a new content model in the project.
+        Attempts to create a new aspect.
         :param content_model_name: The full name of the content model.
         """
         view: AspectView = self._view
