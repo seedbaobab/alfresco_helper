@@ -99,18 +99,22 @@ class ContentModelFileService(XmlFileService):
 
         if not StringHelper.is_empty(description):
             description_node: Element = Element("description")
-            description_node.text = description_node
+            description_node.text = description
             aspect.append(description_node)
 
         properties: Element = Element("properties")
         aspect.append(properties)
 
+        add_to_root: bool = False
         aspects: Element = root.find(".//{0}aspects".format(xmlns, content_model.prefix, aspect))
         if aspects is None:
             aspects = Element("aspects")
-            aspects.append(aspect)
-        else:
-            aspects.append(aspect)
+            add_to_root = True
+
+        Comment
+        aspects.append(aspect)
+
+        if add_to_root:
             root.append(aspects)
 
         self._write_xml_pretty(root, content_model.path, True)

@@ -74,13 +74,13 @@ class ContentModelController(Controller, IContentModelController, ABC):
         """
         self._view.info("Retrieving the content-model data model.")
         name: str = self.__extract_name(content_model)
-        prefix: str = self.__check_prefix(content_model)
-        (content_model_exists, filename) = self.__is_content_model_exists(project, prefix, name)
+        prefix: str = self.__extract_prefix(content_model)
+        (content_model_exists, filepath) = self.__is_content_model_exists(project, prefix, name)
 
         if not content_model_exists:
             raise ApiException("There is no content model named '{0}' in the project.".format(content_model))
 
-        return ContentModel(prefix, name, "{0}{1}{2}".format(project.content_model_folder, os.sep, filename))
+        return ContentModel(prefix, name, filepath)
 
     def __is_content_model_exists(self, project: ProjectModel, prefix: str, name: str) -> tuple[bool, str]:
         """
