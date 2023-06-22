@@ -187,7 +187,7 @@ class ContentModelFileService(XmlFileService):
 
         if not StringHelper.is_empty(description):
             description_node: Element = Element("description")
-            description_node.text = description_node
+            description_node.text = description
             type_node.append(description_node)
 
         properties: Element = Element("properties")
