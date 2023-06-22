@@ -4,7 +4,7 @@ from api.mvc.model.data.content_model import ContentModel
 from api.mvc.model.data.project_model import ProjectModel
 from api.mvc.model.service.data.type_service import TypeService
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
-from api.mvc.view.aspect_view import AspectView
+from api.mvc.view.type_view import TypeView
 from api_core.exception.api_exception import ApiException
 from api_core.helper.constant_helper import ConstantHelper
 from api_core.mvc.controller.controller import Controller
@@ -17,21 +17,21 @@ class TypeController(Controller):
 
     def __init__(self, pc: IProjectController, cmc: IContentModelController):
         """
-        Initialize a new instance of AspectController class.
+        Initialize a new instance of TypeController class.
         :param pc: A project controller.
         :param cmc: A content-model controller.
         """
-        super().__init__("type", TypeService(), AspectView(ConstantHelper.SCREEN_SIZE))
+        super().__init__("type", TypeService(), TypeView(ConstantHelper.SCREEN_SIZE))
         self.__pc: IProjectController = pc
         self.__cmc: IContentModelController = cmc
         self.__cmfs: ContentModelFileService = ContentModelFileService()
 
     def new(self, content_model_name: str):
         """
-        Attempts to create a new content model in the project.
+        Attempts to create a new type.
         :param content_model_name: The full name of the content model.
         """
-        view: AspectView = self._view
+        view: TypeView = self._view
         service: TypeService = self._service
 
         project: ProjectModel = self.__pc.get_project()

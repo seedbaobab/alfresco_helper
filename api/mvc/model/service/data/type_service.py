@@ -30,7 +30,7 @@ class TypeService(Service, ABC):
         """
         Add the 'new' aspect command in manual.
         """
-        self._ms.new_manual("new", "Create a new content model.")
+        self._ms.new_manual("new", "Create a type in a content-model.")
         self._ms.add_call()
         self._ms.add_argument("cm_prefix:cm_name", "The complete content-model name", "str")
         self._ms.save()
