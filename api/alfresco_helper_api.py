@@ -21,9 +21,11 @@ class AlfrescoHelperApi(Api, ABC):
         """
         pc: ProjectController = ProjectController()
         cmc: ContentModelController = ContentModelController(pc, self.template_folder)
+        ac: AspectController = AspectController(pc, cmc)
 
         self.service.add(pc)
         self.service.add(cmc)
+        self.service.add(ac)
 
     def _execute(self, controller: str, command: str, arguments: list[str]):
         """
@@ -36,6 +38,8 @@ class AlfrescoHelperApi(Api, ABC):
             self.__execute_project_command(command, arguments)
         elif controller.__eq__("model"):
             self.__execute_model_command(command, arguments)
+        elif controller.__eq__("aspect"):
+            self.__execute_aspect_command(command, arguments)
 
     def __execute_aspect_command(self, command: str, arguments: list[str]):
         """

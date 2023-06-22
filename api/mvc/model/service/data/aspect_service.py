@@ -19,3 +19,18 @@ class AspectService(Service, ABC):
 
     def new(self, content_model: ContentModel, name: str, title: str, description: str):
         self.__cmfs.add_aspect(content_model, name, title, description)
+
+    def init_manual(self):
+        """
+        Initializes the service manual.
+        """
+        self.__new_manual()
+
+    def __new_manual(self):
+        """
+        Add the 'new' aspect command in manual.
+        """
+        self._ms.new_manual("new", "Create a new content model.")
+        self._ms.add_call()
+        self._ms.add_argument("cm_prefix:cm_name", "The complete content-model name", "str")
+        self._ms.save()
