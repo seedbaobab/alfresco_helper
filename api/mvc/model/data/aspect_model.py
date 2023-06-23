@@ -20,5 +20,5 @@ class AspectModel(DataModel):
         """
         super().__init__(name, title, description, DataType.ASPECT)
 
-        self.parent = None
-        self.mandatory = []
+    def add_mandatory_aspect(self, mandatory_aspect: DataModel):
+        self._mandatory.append(mandatory_aspect)

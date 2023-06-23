@@ -1,4 +1,5 @@
 from api_core.exception.api_exception import ApiException
+from api_core.helper.string_helper import StringHelper
 from api_core.mvc.view.message_type import MessageType
 
 
@@ -42,6 +43,20 @@ class View:
         self.__print_typed_message(MessageType.INPUT, message)
         client_input: str = input()
         return client_input
+
+    def get_bool_input(self, message: str) -> bool:
+        """
+        Print a message and allow the user to type a response.
+        :param message: The message to print on the output.
+        :return: The user's response.
+        """
+        self.__print_typed_message(MessageType.INPUT, message)
+        client_input: str = input()
+        if StringHelper.is_empty(client_input) or client_input.__eq__("n"):
+            return False
+        elif client_input.__eq__("y"):
+            return True
+        raise ApiException("Your answer is invalid. It can be empty (False), equal to 'n' (False) or 'y' (True).")
 
     def exception(self, exception: ApiException):
         """
@@ -119,7 +134,7 @@ class View:
 
     def __start(self, message: str):
         """
-        print a start message on the output.
+        Print a start message on the output.
         :param message: The message to print on the output.
         """
         self.__print_typed_message(MessageType.START, message)
@@ -127,7 +142,7 @@ class View:
     def __end(self, message: str):
         """
         Print on the standard output an end message.
-        :param message: The message to print on the standard otput.
+        :param message: The message to print on the standard output.
         """
         self.separation()
         self.__print_typed_message(MessageType.END, message)
@@ -148,16 +163,16 @@ class View:
     def __fill_line(self, character: str) -> str:
         """
         Return a filled line with the character in parameter.
-        :param character: The character that fill the line.
+        :param character: The character that fills the line.
         :return: A line filled with the character in parameter.
         """
         return "|{0}|".format(character * (self.__width - 2))
 
     def __split_in_lines(self, message: str):
         """
-        Split a message into line array.
+        Split a message into a line array.
         :param message: The message to split.
-        :return: The message split in lines array.
+        :return: The message split in a line array.
         """
         result: [str] = []
         messages: list[str] = message.splitlines()

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Optional
 
-from api.mvc.model.data.aspect_model import AspectModel
 from api.mvc.model.data.data_model import DataModel
 from api.mvc.model.data.data_type import DataType
 

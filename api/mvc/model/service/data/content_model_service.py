@@ -52,7 +52,7 @@ class ContentModelService(Service, ABC):
         maximum: int = len(contents)
 
         while index.__lt__(maximum) and cm_name is None:
-            if self.__cmfs.extract_prefix("{1}{0}{2}".format(os.sep, project.content_model_folder, contents[index])) \
+            if self.__cmfs.extract_content_model_prefix("{1}{0}{2}".format(os.sep, project.content_model_folder, contents[index])) \
                     .__eq__(prefix):
                 cm_name = contents[index]
             else:
@@ -76,7 +76,7 @@ class ContentModelService(Service, ABC):
         maximum: int = len(contents)
 
         while index.__lt__(maximum) and cm_name is None:
-            if self.__cmfs.extract_name("{1}{0}{2}".format(os.sep, project.content_model_folder, contents[index])) \
+            if self.__cmfs.extract_content_model_name("{1}{0}{2}".format(os.sep, project.content_model_folder, contents[index])) \
                     .__eq__(name):
                 cm_name = contents[index]
             else:

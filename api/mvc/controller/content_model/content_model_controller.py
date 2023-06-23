@@ -98,7 +98,7 @@ class ContentModelController(Controller, IContentModelController, ABC):
         maximum: int = len(contents)
         while index.__lt__(maximum) and cm_filepath is None:
             filepath: str = "{0}{1}{2}".format(project.content_model_folder, os.sep, contents[index])
-            if prefix.__eq__(self.cmfs.extract_prefix(filepath)) and name.__eq__(self.cmfs.extract_name(filepath)):
+            if prefix.__eq__(self.cmfs.extract_content_model_prefix(filepath)) and name.__eq__(self.cmfs.extract_content_model_name(filepath)):
                 cm_filepath = filepath
             else:
                 index += 1

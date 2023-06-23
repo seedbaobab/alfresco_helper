@@ -3,6 +3,7 @@ from abc import ABC
 from api.mvc.controller.aspect.aspect_controller import AspectController
 from api.mvc.controller.content_model.content_model_controller import ContentModelController
 from api.mvc.controller.project.project_controller import ProjectController
+from api.mvc.controller.property.property_controller import PropertyController
 from api.mvc.controller.type.type_controller import TypeController
 from api_core.exception.api_exception import ApiException
 from api_core.api import Api
@@ -24,11 +25,13 @@ class AlfrescoHelperApi(Api, ABC):
         cmc: ContentModelController = ContentModelController(pc, self.template_folder)
         ac: AspectController = AspectController(pc, cmc)
         tc: TypeController = TypeController(pc, cmc)
+        ppc: PropertyController = PropertyController(pc, cmc, ac, tc)
 
         self.service.add(pc)
         self.service.add(cmc)
         self.service.add(ac)
         self.service.add(tc)
+        self.service.add(ppc)
 
     def _execute(self, controller: str, command: str, arguments: list[str]):
         """
@@ -45,6 +48,29 @@ class AlfrescoHelperApi(Api, ABC):
             self.__execute_aspect_command(command, arguments)
         elif controller.__eq__("type"):
             self.__execute_type_command(command, arguments)
+        elif controller.__eq__("property"):
+            self.__execute_property_command(command, arguments)
+
+    def __execute_property_command(self, command: str, arguments: list[str]):
+        """
+        Interpret the command for a property.
+        :param command: The name of the command.
+        :param arguments: The list of arguments.
+        """
+        controller: PropertyController = self.service.get("property")
+
+        # Create a new content-model.
+        if command.__eq__("new"):
+            controller.new(arguments[0], arguments[1])
+
+        # Access to the model commands manual.
+        elif command.__eq__("man"):
+            if len(arguments).__eq__(1):
+                controller.man(arguments[0])
+            elif len(arguments).__eq__(0):
+                controller.man()
+        else:
+            raise ApiException("The command '{0}_{1}' has been defined but not implemented.".format(command, "project"))
 
     def __execute_type_command(self, command: str, arguments: list[str]):
         """

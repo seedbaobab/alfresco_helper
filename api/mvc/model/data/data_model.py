@@ -20,7 +20,7 @@ class DataModel:
         self.__name: str = name
         self.__title: Optional[str] = title
         self.__typology: DataType = typology
-        self.__mandatory: list[DataModel] = []
+        self._mandatory: list[DataModel] = []
         self.__parent: Optional[DataModel] = None
         self.__properties: list[PropertyModel] = []
         self.__description: Optional[str] = description
@@ -59,7 +59,7 @@ class DataModel:
 
     @property
     def typology(self) -> str:
-        return self.__typology.name
+        return self.__typology.value
 
     @property
     def parent(self):

@@ -10,10 +10,10 @@ L'API a été dévelppé dans le but d'intéragir avec les éléments d'Alfesco 
 * Les aspects d'un modèle de contenu d'un projet
 * Les types d'un modèle de contenu d'un projet
 
-Chaque objet est définit dans 
-
 ## Avancement
 * Création d'un nouveau projet : **OK**
 * Création d'un nouveau content-model : **OK**
 * Création d'un nouvel aspect : **OK**
-* Création d'un nouveau type: **WIK**
+* Création d'un nouveau type: **OK**
+* Création d'une nouvelle propriété pour un aspect: **OK**
+* Création d'une nouvelle propriété pour un type: **OK**
