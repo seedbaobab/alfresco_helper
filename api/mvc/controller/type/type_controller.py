@@ -10,10 +10,10 @@ from api.mvc.model.data.data_type import DataType
 from api.mvc.model.data.project_model import ProjectModel
 from api.mvc.model.data.type_model import TypeModel
 from api.mvc.model.service.data.type_service import TypeService
-from api.mvc.model.service.file.content_model_service import ContentModelFileService
 from api.mvc.view.type_view import TypeView
 from api_core.exception.api_exception import ApiException
 from api_core.helper.constant_helper import ConstantHelper
+from api_core.helper.file_folder_helper import FileFolderHelper
 
 
 class TypeController(DataController, ITypeController, ABC):
@@ -57,6 +57,29 @@ class TypeController(DataController, ITypeController, ABC):
         service.new(content_model, name, title, description)
         view.success("Aspect '{0}' was successfully created in content model '{1}'.".format(name, content_model_name))
 
+    def extend(self, content_model_name: str, type_name: str, parent_type_name: str):
+        """
+        Extends a data type to another data type.
+        :param content_model_name: The full name of the content model.
+        :param type_name: The name of the type to extend.
+        :param parent_type_name:The name of the parent type.
+        """
+        project: ProjectModel = self._pc.get_project()
+        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name)
+        self._view.info("Extended type '{0}' to type '{1}'.".format(type_name, parent_type_name))
+        self._extend(content_model, DataType.TYPE.value, type_name, parent_type_name)
+        self._view.success("Type '{0}' was successfully extended to type '{1}'."
+                           .format(type_name, parent_type_name))
+
+    def mandatory(self, content_model_name: str, type_name: str, mandatory_aspect_name: str):
+        self._view.info("Add aspect '{0}' to the list of mandatory aspects of type '{1}'."
+                        .format(mandatory_aspect_name, type_name))
+        project: ProjectModel = self._pc.get_project()
+        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name)
+        self._add_mandatory(content_model, DataType.ASPECT.value, type_name, mandatory_aspect_name)
+        self._view.success("Aspect '{0}' was successfully added to the list of required aspects for type '{1}'."
+                           .format(mandatory_aspect_name, type_name))
+
     def get_type(self, content_model: ContentModel, name: str) -> Optional[TypeModel]:
         """
         Retrieves the data model of an Alfresco AIO type.
@@ -66,32 +89,49 @@ class TypeController(DataController, ITypeController, ABC):
         """
         self._view.info("Retrieving the type data model.")
         return self._get(content_model, DataType.TYPE.value, name)
-        # filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
-        #
-        # # Verification that the type exists.
-        # if self.__cmfs.find_type(content_model, name) is None:
-        #     return None
-        #
-        # # Verification that the aspect has been declared only once in the file.
-        # types_name: list[str] = self.__cmfs.get_aspects_name(content_model)
-        # if types_name.count(name).__gt__(1):
-        #     raise ApiException("Type '{0}' was declared more than once in content model '{1}' in file '{2}'."
-        #                        .format(name, content_model.complete_name, filename))
-        #
-        # # Verification that there is no circular inheritance.
-        # ancestors: list[str] = self.__check_ancestors(content_model, name, "{0}:{1}".format(content_model.prefix, name))
-        # self.__check_mandatory_aspects(content_model, name, "{0}:{1}".format(content_model.prefix, name), ancestors)
-        #
-        # aspect: TypeModel = TypeModel(name, self.__cmfs.get_type_title(content_model, name),
-        #                               self.__cmfs.get_type_description(content_model, name))
-        # aspect.parent(self.__get_type(content_model, self.__cmfs.get_aspect_parent(content_model, name)))
-        #
-        # for mandatory_aspect in self.__cmfs.get_type_mandatory_aspects(content_model, name):
-        #     aspect.add_mandatory_aspect(self.__get_aspect(content_model, mandatory_aspect))
-        #
-        # return aspect
 
     def _check_mandatory_aspects(self, content_model: ContentModel, source: str, complete_name: Optional[str],
-                                 ancestors: list[str], mandatory: list[str] = [])  -> list[str]:
-        pass
+                                 ancestors: list[str], mandatory: list[str]) -> list[str]:
+        # todo : Check the method
+        if complete_name is None:
+            mandatory.pop(0)
+            return mandatory
 
+        name: str = complete_name.rsplit(":", 1)[1]
+        if self._cmfs.find_aspect(content_model, name) is None:
+            raise ApiException(
+                "Aspect '{0}' has a required aspect '{1}' which does not exist in content model '{2}' "
+                "in file '{3}'.".format(mandatory[len(mandatory) - 1], name, content_model.complete_name,
+                                        FileFolderHelper.extract_filename_from_path(content_model.path)))
+
+        if ancestors.count(name).__gt__(0):
+            raise ApiException(
+                "The aspect '{0}' is declared in the ancestors of the aspect '{0}'. It cannot therefore"
+                " be one of its mandatory aspects (direct or by inheritance)."
+                .format(name, source))
+
+        if mandatory.count(name).__gt__(0):
+            raise ApiException("Aspect '{0}' appears twice in the list of mandatory aspects of aspect '{1}' (by "
+                               "inheritance or directly).".format(name, source))
+
+        mandatory.append(name)
+        if len(ancestors).__gt__(1):
+            mandatory_ancestors: list[str] = self.__check_ancestors(content_model, DataType.ASPECT.name, name,
+                                                                    complete_name, [])
+            for mandatory_ancestor in mandatory_ancestors:
+                if ancestors.count(mandatory_ancestor).__gt__(0) or mandatory.count(mandatory_ancestor).__gt__(0):
+                    raise ApiException(
+                        "Aspect '{0}' appears twice in the list of mandatory aspects of aspect '{1}' "
+                        "(by inheritance or directly) by aspect '{2}'."
+                        .format(mandatory_ancestor, source, name))
+                mandatory.append(mandatory_ancestor)
+
+        if name.__eq__(source):
+            for mandatory_aspect in self._cmfs.get_type_mandatory_aspects(content_model, name):
+                self._check_mandatory_aspects(content_model, source, mandatory_aspect, ancestors, mandatory)
+
+        else:
+            for mandatory_aspect in self._cmfs.get_aspect_mandatory_aspects(content_model, name):
+                self._check_mandatory_aspects(content_model, source, mandatory_aspect, ancestors, mandatory)
+
+        return mandatory

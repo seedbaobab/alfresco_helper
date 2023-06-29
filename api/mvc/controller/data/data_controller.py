@@ -20,8 +20,19 @@ from api_core.mvc.view.view import View
 
 
 class DataController(Controller, ABC):
+    """
+    Controller class used to manage API project's data.
+    """
 
     def __init__(self, name: str, service: Service, view: View, pc: IProjectController, cmc: IContentModelController):
+        """
+        Initialize a new instance of DataController class.
+        :param name: The name of the controller.
+        :param service: The controller's basic service.
+        :param view: The controller's view.
+        :param pc: A project controller.
+        :param cmc: A content model controller.
+        """
         super().__init__(name, service, view)
         self._pc: IProjectController = pc
         self._cmc: IContentModelController = cmc
@@ -74,6 +85,13 @@ class DataController(Controller, ABC):
         return data
 
     def _extend(self, content_model: ContentModel, data_type: str, source_name: str, parent_name: str):
+        """
+        Method allowing a datum (aspect or type) to extend over another datum.
+        :param content_model: The data content model.
+        :param data_type: The type of data to bind.
+        :param source_name: The name of the data to expand.
+        :param parent_name: The name of the parent data.
+        """
         service: AspectService = self._service
         source: DataModel = self._get(content_model, data_type, source_name)
         parent: DataModel = self._get(content_model, data_type, parent_name)
@@ -92,6 +110,13 @@ class DataController(Controller, ABC):
         service.extend(content_model, source, parent)
 
     def _add_mandatory(self, content_model: ContentModel, data_type: str, source_name: str, mandatory_name: str):
+        """
+        Method allowing to add a "mandatory-aspect" to data (aspect or type).
+        :param content_model: The data content model.
+        :param data_type: The type of data to bind.
+        :param source_name: The type of data to modify (the one that will include the new mandatory-aspect).
+        :param mandatory_name: The name of the required aspect to add.
+        """
         # Retrieving the source data model model.
         source: DataModel = self._get(content_model, data_type, source_name)
         filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
@@ -132,7 +157,7 @@ class DataController(Controller, ABC):
                                .format(data_1.name, data_type, data_2.name, filename))
 
     def __check_ancestors(self, content_model: ContentModel, typology: str, source: str, complete_name: Optional[str],
-                          ancestors: list[str] = []) -> list[str]:
+                          ancestors: list[str]) -> list[str]:
         if complete_name is None:
             # Removing the first element, which is the aspect we're trying to get.
             if len(ancestors).__gt__(0):
@@ -158,5 +183,5 @@ class DataController(Controller, ABC):
 
     @abstractmethod
     def _check_mandatory_aspects(self, content_model: ContentModel, source: str, complete_name: Optional[str],
-                                 ancestors: list[str], mandatory: list[str] = []) -> list[str]:
+                                 ancestors: list[str], mandatory: list[str]) -> list[str]:
         pass

@@ -46,7 +46,7 @@ class AspectService(Service, ABC):
 
     def __extend_manual(self):
         """
-        Add the 'new' aspect command in manual.
+        Add the 'extend' aspect command in manual.
         """
         self._ms.new_manual("extend", "Extend the first aspect to the second in the content-model.")
         self._ms.add_call()
@@ -57,11 +57,11 @@ class AspectService(Service, ABC):
 
     def __mandatory_manual(self):
         """
-        Add the 'new' aspect command in manual.
+        Add the 'mandatory' aspect command in the manual.
         """
-        self._ms.new_manual("mandatory", "Adds a mandatory aspect to the data model (type or aspect).")
+        self._ms.new_manual("mandatory", "Adds a mandatory aspect to an aspect.")
         self._ms.add_call()
         self._ms.add_argument("cm_prefix:cm_name", "The complete content-model name", "str")
         self._ms.add_argument("aspect_name", "The name of the aspect whose parent must be modified", "str")
-        self._ms.add_argument("parent_aspect_name", "The name of the new mandatory aspect.", "str")
+        self._ms.add_argument("mandatory_aspect_name", "The name of the new mandatory aspect.", "str")
         self._ms.save()

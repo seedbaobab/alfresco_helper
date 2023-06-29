@@ -18,9 +18,6 @@ from api_core.helper.file_folder_helper import FileFolderHelper
 from api_core.helper.string_helper import StringHelper
 
 
-# from api_core.helper.string_helper import StringHelper
-
-
 class AspectController(DataController, IAspectController, ABC):
     """
     Controller class used to manage API project's aspect.
@@ -33,9 +30,6 @@ class AspectController(DataController, IAspectController, ABC):
         :param cmc: A content-model controller.
         """
         super().__init__("aspect", AspectService(), AspectView(ConstantHelper.SCREEN_SIZE), pc, cmc)
-        # self.__pc: IProjectController = pc
-        # self.__cmc: IContentModelController = cmc
-        # self.__cmfs: ContentModelFileService = ContentModelFileService()
 
     def new(self, content_model_name: str):
         """
@@ -65,12 +59,27 @@ class AspectController(DataController, IAspectController, ABC):
         view.success("Aspect '{0}' was successfully created in content model '{1}'.".format(name, content_model_name))
 
     def extend(self, content_model_name: str, aspect_name: str, parent_aspect_name: str):
+        """
+        Extends a data type to another data type.
+        :param content_model_name: The full name of the content model.
+        :param aspect_name: The name of the type to extend.
+        :param parent_aspect_name:The name of the parent type.
+        """
         project: ProjectModel = self._pc.get_project()
         content_model: ContentModel = self._cmc.get_content_model(project, content_model_name)
+        self._view.info("Extended aspect '{0}' to aspect '{1}'.".format(aspect_name, parent_aspect_name))
         self._extend(content_model, DataType.ASPECT.value, aspect_name, parent_aspect_name)
+        self._view.success("Aspect '{0}' was successfully extended to Aspect '{1}'."
+                           .format(aspect_name, parent_aspect_name))
 
     def mandatory(self, content_model_name: str, aspect_name: str, mandatory_aspect_name: str):
-        self._view.info("Added aspect '{0}' to the list of mandatory aspects of aspect '{1}'."
+        """
+        Add a required aspect to an aspect.
+        :param content_model_name: The full name of the content model.
+        :param aspect_name: The name of the aspect to host the new mandatory aspect.
+        :param mandatory_aspect_name: The name of the new mandatory aspect.
+        """
+        self._view.info("Add aspect '{0}' to the list of mandatory aspects of aspect '{1}'."
                         .format(mandatory_aspect_name, aspect_name))
         project: ProjectModel = self._pc.get_project()
         content_model: ContentModel = self._cmc.get_content_model(project, content_model_name)
@@ -89,7 +98,7 @@ class AspectController(DataController, IAspectController, ABC):
         return self._get(content_model, DataType.ASPECT.value, name)
 
     def _check_mandatory_aspects(self, content_model: ContentModel, source: str, complete_name: Optional[str],
-                                 ancestors: list[str], mandatory: list[str] = []) -> list[str]:
+                                 ancestors: list[str], mandatory: list[str]) -> list[str]:
 
         if complete_name is None:
             mandatory.pop(0)
@@ -115,7 +124,7 @@ class AspectController(DataController, IAspectController, ABC):
         mandatory.append(name)
         if len(ancestors).__gt__(1):
             mandatory_ancestors: list[str] = self.__check_ancestors(content_model, DataType.ASPECT.name, name,
-                                                                    complete_name)
+                                                                    complete_name, [])
             for mandatory_ancestor in mandatory_ancestors:
                 if ancestors.count(mandatory_ancestor).__gt__(0) or mandatory.count(mandatory_ancestor).__gt__(0):
                     raise ApiException(
