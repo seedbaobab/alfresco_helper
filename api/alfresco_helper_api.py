@@ -105,6 +105,12 @@ class AlfrescoHelperApi(Api, ABC):
         if command.__eq__("new"):
             controller.new(arguments[0])
 
+        elif command.__eq__("extend"):
+            controller.extend(arguments[0], arguments[1], arguments[2])
+
+        elif command.__eq__("mandatory"):
+            controller.mandatory(arguments[0], arguments[1], arguments[2])
+
         # Access to the model commands manual.
         elif command.__eq__("man"):
             if len(arguments).__eq__(1):

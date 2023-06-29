@@ -288,6 +288,43 @@ class ContentModelFileService(XmlFileService):
 
         self._write(root, content_model.path)
 
+    def add_extension(self, content_model: ContentModel, source: DataModel, parent: DataModel):
+        namespace: str = self.get_namespace("xmlns")
+        root: Element = self._get_root(content_model.path)
+
+        source_node: Element = root.find(".//{0}{1}s/{0}{1}[@name='{2}:{3}']"
+                                         .format(namespace, source.typology, content_model.prefix, source.name))
+        parent_node: Optional[Element] = source_node.find("./{0}parent".format(namespace))
+
+        add_parent: bool = True if parent_node is None else False
+        if add_parent:
+            parent_node = Element("parent")
+        parent_node.text = "{0}:{1}".format(content_model.prefix, parent.name)
+        if add_parent:
+            source_node.insert(self.__get_properties_node_index(source_node), parent_node)
+
+        self._write(root, content_model.path)
+
+    def add_mandatory(self, content_model: ContentModel, source: DataModel, mandatory: DataModel):
+        namespace: str = self.get_namespace("xmlns")
+        root: Element = self._get_root(content_model.path)
+
+        source_node: Element = root.find(".//{0}{1}s/{0}{1}[@name='{2}:{3}']"
+                                         .format(namespace, source.typology, content_model.prefix, source.name))
+        mandatory_node: Optional[Element] = source_node.find("./{0}mandatory-aspects".format(namespace))
+
+        aspect: Element = Element("aspect")
+        aspect.text = "{0}:{1}".format(content_model.prefix, mandatory.name)
+
+        add_mandatory_node: bool = True if mandatory_node is None else False
+        if add_mandatory_node:
+            mandatory_node = Element("mandatory-aspects")
+        mandatory_node.append(aspect)
+        if add_mandatory_node:
+            source_node.append(mandatory_node)
+
+        self._write(root, content_model.path)
+
     def get_aspect_description(self, content_model: ContentModel, name: str) -> Optional[str]:
         """
         Retrieve the value of the description node of an aspect node.
@@ -322,10 +359,10 @@ class ContentModelFileService(XmlFileService):
         :param name: The name of the aspect node.
         :return: The value of the aspect's parent node.
         """
-        return self.get_data_parent(content_model, DataType.ASPECT.name, name)
+        return self.get_data_parent(content_model, DataType.ASPECT.value, name)
 
     def get_aspect_mandatory_aspects(self, content_model: ContentModel, name: str) -> list[str]:
-        return self.__get_data_mandatory_aspects(content_model, DataType.ASPECT.name, name)
+        return self.__get_data_mandatory_aspects(content_model, DataType.ASPECT.value, name)
 
     def get_type_title(self, content_model: ContentModel, name: str) -> Optional[str]:
         """
@@ -354,7 +391,7 @@ class ContentModelFileService(XmlFileService):
         return self.__extract_data_name(aspect, DataType.ASPECT.name, filename)
 
     def get_type_mandatory_aspects(self, content_model: ContentModel, name: str) -> list[str]:
-        return self.__get_data_mandatory_aspects(content_model, DataType.TYPE.name, name)
+        return self.__get_data_mandatory_aspects(content_model, DataType.TYPE.value, name)
 
     def __extract_type_name(self, type_node: Element, filename: str) -> str:
         """
@@ -362,7 +399,7 @@ class ContentModelFileService(XmlFileService):
         :param type_node: The type node.
         :return: The type name.
         """
-        return self.__extract_data_name(type_node, DataType.TYPE.name, filename)
+        return self.__extract_data_name(type_node, DataType.TYPE.value, filename)
 
     @staticmethod
     def __extract_data_name(data: Element, typology: str, filename: str) -> str:
@@ -426,7 +463,7 @@ class ContentModelFileService(XmlFileService):
         :param name: The name of the data node.
         :return: The value of the data node description node.
         """
-        description: Element = self._get_root(content_model.path)\
+        description: Element = self._get_root(content_model.path) \
             .find(".//{0}{1}s/{0}{1}[@name='{2}:{3}']/{0}description"
                   .format(self.get_namespace("xmlns"), typology, content_model.prefix, name))
         return None if description is None else description.text
@@ -439,7 +476,7 @@ class ContentModelFileService(XmlFileService):
         :param name: The name of the data node.
         :return: The value of the data node title node.
         """
-        title: Element = self._get_root(content_model.path)\
+        title: Element = self._get_root(content_model.path) \
             .find(".//{0}{1}s/{0}{1}[@name='{2}:{3}']/{0}title"
                   .format(self.get_namespace("xmlns"), typology, content_model.prefix, name))
         return None if title is None else title.text
@@ -452,16 +489,31 @@ class ContentModelFileService(XmlFileService):
         :param name: The name of the data node.
         :return: The value of the data node title node.
         """
-        parent: Element = self._get_root(content_model.path)\
+        parent: Element = self._get_root(content_model.path) \
             .find(".//{0}{1}s/{0}{1}[@name='{2}:{3}']/{0}parent"
                   .format(self.get_namespace("xmlns"), typology, content_model.prefix, name))
         return None if parent is None else parent.text
 
     def __get_data_mandatory_aspects(self, content_model: ContentModel, typology: str, name: str) -> list[str]:
         result: list[str] = []
-        for mandatory_aspect in self._get_root(content_model.path).findall(".//{0}{1}s/{0}{1}[@name='{2}:{3}']/{0}mandatory-aspects/{0}aspect".format(self.get_namespace("xmlns"), typology, content_model.prefix, name)):
+        root: Element = self._get_root(content_model.path)
+        mandatory_aspects: list[Element] = root.findall(".//{0}{1}s/{0}{1}[@name='{2}:{3}']/{0}mandatory-aspects"
+                                                        "/{0}aspect".format(self.get_namespace("xmlns"), typology,
+                                                                            content_model.prefix, name))
+        for mandatory_aspect in mandatory_aspects:
             result.append(mandatory_aspect.text)
         return result
+
+    def __get_properties_node_index(self, data_node: Element) -> int:
+        namespace: str = self.get_namespace("xmlns")
+        children: list[Element] = data_node.findall(".//{0}*".format(namespace))
+        maximum: int = len(children)
+        index: int = 0
+
+        while index.__lt__(maximum) and children[index].tag.__ne__("{0}properties".format(namespace)):
+            index += 1
+
+        return index if index.__lt__(maximum) else (index - 1)
 
     def get_properties(self, content_model: ContentModel) -> list[str]:
         result: list[str] = []

@@ -64,35 +64,19 @@ class AspectController(DataController, IAspectController, ABC):
         service.new(content_model, name, title, description)
         view.success("Aspect '{0}' was successfully created in content model '{1}'.".format(name, content_model_name))
 
-    # def __get_aspect(self, content_model: ContentModel, name: Optional[str]) -> Optional[AspectModel]:
-    #     if StringHelper.is_empty(name):
-    #         return None
-    #     filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
-    #
-    #     # Verification that the aspect exists.
-    #     if self._cmfs.find_aspect(content_model, name) is None:
-    #         raise ApiException("There is no aspect named '{0}' in content model '{1}' in file '{2}'."
-    #                            .format(name, content_model.complete_name, filename))
-    #
-    #     # Verification that the aspect has been declared only once in the file.
-    #     aspects_name: list[str] = self._cmfs.get_aspects_name(content_model)
-    #     if aspects_name.count(name).__gt__(1):
-    #         raise ApiException("Aspect '{0}' was declared more than once in content model '{1}' in file '{2}'."
-    #                            .format(name, content_model.complete_name, filename))
-    #
-    #     # Verification that there is no circular inheritance.
-    #     ancestors: list[str] = self.__check_ancestors(content_model, DataType.ASPECT.name, name,
-    #                                                   "{0}:{1}".format(content_model.prefix, name))
-    #     self._check_mandatory_aspects(content_model, name, "{0}:{1}".format(content_model.prefix, name), ancestors)
-    #
-    #     aspect: AspectModel = AspectModel(name,
-    #                                       self._cmfs.get_aspect_title(content_model, name),
-    #                                       self._cmfs.get_aspect_description(content_model, name))
-    #     aspect.parent(self.__get_aspect(content_model, self._cmfs.get_aspect_parent(content_model, name)))
-    #     for mandatory_aspect in self._cmfs.get_aspect_mandatory_aspects(content_model, name):
-    #         aspect.add_mandatory_aspect(self.__get_aspect(content_model, mandatory_aspect))
-    #
-    #     return aspect
+    def extend(self, content_model_name: str, aspect_name: str, parent_aspect_name: str):
+        project: ProjectModel = self._pc.get_project()
+        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name)
+        self._extend(content_model, DataType.ASPECT.value, aspect_name, parent_aspect_name)
+
+    def mandatory(self, content_model_name: str, aspect_name: str, mandatory_aspect_name: str):
+        self._view.info("Added aspect '{0}' to the list of mandatory aspects of aspect '{1}'."
+                        .format(mandatory_aspect_name, aspect_name))
+        project: ProjectModel = self._pc.get_project()
+        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name)
+        self._add_mandatory(content_model, DataType.ASPECT.value, aspect_name, mandatory_aspect_name)
+        self._view.success("Aspect '{0}' was successfully added to the list of required aspects for aspect '{1}'."
+                           .format(mandatory_aspect_name, aspect_name))
 
     def get_aspect(self, content_model: ContentModel, name: str) -> Optional[AspectModel]:
         """
@@ -103,37 +87,12 @@ class AspectController(DataController, IAspectController, ABC):
         """
         self._view.info("Retrieving the aspect data model.")
         return self._get(content_model, DataType.ASPECT.value, name)
-        # filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
-        #
-        # # Verification that the aspect exists.
-        # if self._cmfs.find_aspect(content_model, name) is None:
-        #     return None
-        #     # raise ApiException("There is no aspect named '{0}' in content model '{1}' in file '{2}'."
-        #     #                    .format(name, content_model.complete_name, filename))
-        #
-        # # Verification that the aspect has been declared only once in the file.
-        # aspects_name: list[str] = self._cmfs.get_aspects_name(content_model)
-        # if aspects_name.count(name).__gt__(1):
-        #     raise ApiException("Aspect '{0}' was declared more than once in content model '{1}' in file '{2}'."
-        #                        .format(name, content_model.complete_name, filename))
-        #
-        # # Verification that there is no circular inheritance.
-        # ancestors: list[str] = self.__check_ancestors(content_model, DataType.ASPECT.name, name,
-        #                                               "{0}:{1}".format(content_model.prefix, name))
-        # self._check_mandatory_aspects(content_model, name, "{0}:{1}".format(content_model.prefix, name), ancestors)
-        #
-        # aspect: AspectModel = AspectModel(name,
-        #                                   self._cmfs.get_aspect_title(content_model, name),
-        #                                   self._cmfs.get_aspect_description(content_model, name))
-        # aspect.parent(self.__get_aspect(content_model, self._cmfs.get_aspect_parent(content_model, name)))
-        # for mandatory_aspect in self._cmfs.get_aspect_mandatory_aspects(content_model, name):
-        #     aspect.add_mandatory_aspect(self.__get_aspect(content_model, mandatory_aspect))
-        #
-        # return aspect
 
     def _check_mandatory_aspects(self, content_model: ContentModel, source: str, complete_name: Optional[str],
-                                 ancestors: list[str], mandatory: list[str] = []):
+                                 ancestors: list[str], mandatory: list[str] = []) -> list[str]:
+
         if complete_name is None:
+            mandatory.pop(0)
             return mandatory
 
         name: str = complete_name.rsplit(":", 1)[1]
@@ -149,11 +108,11 @@ class AspectController(DataController, IAspectController, ABC):
                 " be one of its mandatory aspects (direct or by inheritance)."
                 .format(name, source))
 
-        mandatory.append(name)
-        if mandatory.count(name).__gt__(1):
+        if mandatory.count(name).__gt__(0):
             raise ApiException("Aspect '{0}' appears twice in the list of mandatory aspects of aspect '{1}' (by "
                                "inheritance or directly).".format(name, source))
 
+        mandatory.append(name)
         if len(ancestors).__gt__(1):
             mandatory_ancestors: list[str] = self.__check_ancestors(content_model, DataType.ASPECT.name, name,
                                                                     complete_name)
@@ -167,6 +126,8 @@ class AspectController(DataController, IAspectController, ABC):
 
         for mandatory_aspect in self._cmfs.get_aspect_mandatory_aspects(content_model, name):
             self._check_mandatory_aspects(content_model, source, mandatory_aspect, ancestors, mandatory)
+
+        return mandatory
 
     @staticmethod
     def __check_name(value: str):

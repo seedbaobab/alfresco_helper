@@ -92,6 +92,6 @@ class TypeController(DataController, ITypeController, ABC):
         # return aspect
 
     def _check_mandatory_aspects(self, content_model: ContentModel, source: str, complete_name: Optional[str],
-                                 ancestors: list[str], mandatory: list[str] = []):
+                                 ancestors: list[str], mandatory: list[str] = [])  -> list[str]:
         pass
 
