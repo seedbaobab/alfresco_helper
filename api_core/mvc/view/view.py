@@ -1,3 +1,7 @@
+from termcolor import colored, cprint
+
+import colorama as colorama
+
 from api_core.exception.api_exception import ApiException
 from api_core.helper.string_helper import StringHelper
 from api_core.mvc.view.message_type import MessageType
@@ -13,6 +17,7 @@ class View:
         Initialize a new instance of 'View' class.
         :param width: The maximum width of the screen.
         """
+        colorama.init()
         self.__width: int = width
         self.__space: int = MessageType.maximum_space()
         self.__maximum_row_width: int = self.__width - 4
@@ -118,20 +123,6 @@ class View:
         self.__print_typed_message(MessageType.WARN, message)
         self.separation()
 
-    def sub_info(self, message: str):
-        """
-        Print a sub information message on the output.
-        :param message: The message to print on the output.
-        """
-        self.__print_typed_message(MessageType.SUB_INFO, message)
-
-    def sub_success(self, message: str):
-        """
-        Print a sub-success message on the output.
-        :param message: The message to print on the output.
-        """
-        self.__print_typed_message(MessageType.SUB_SUCCESS, message)
-
     def __start(self, message: str):
         """
         Print a start message on the output.
@@ -154,11 +145,16 @@ class View:
         :param message: The message to print.
         """
         message_to_print: str = "[{0}] {1}".format(message_type.value.ljust(self.__space), message)
+
         for line in self.__split_in_lines(message_to_print):
-            if message_type.value.__ne__("INPUT"):
+            if message_type.value.__eq__("ERROR"):
+                print(colored("| {0} |".format(line.ljust(self.__maximum_row_width)), "light_red"))
+            elif message_type.value.__eq__("SUCCESS"):
+                print(colored("| {0} |".format(line.ljust(self.__maximum_row_width)), "light_green"))
+            elif message_type.value.__ne__("INPUT"):
                 print("| {0} |".format(line.ljust(self.__maximum_row_width)))
             else:
-                print("| {0}: ".format(line), end='')
+                cprint("| {0}: ".format(line), "white", end='')
 
     def __fill_line(self, character: str) -> str:
         """
