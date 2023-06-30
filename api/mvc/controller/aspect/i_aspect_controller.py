@@ -19,3 +19,13 @@ class IAspectController(ABC):
         :return: The data model of an aspect.
         """
         pass
+
+    @abstractmethod
+    def load_aspect(self, content_model: ContentModel, name: str) -> AspectModel:
+        """
+        Load the appearance of a content-model.
+        :param content_model: The aspect's content-model.
+        :param name: The aspect name.
+        :return: The data model of an aspect.
+        """
+        pass

@@ -502,6 +502,7 @@ class ContentModelFileService(XmlFileService):
                                                                             content_model.prefix, name))
         for mandatory_aspect in mandatory_aspects:
             result.append(mandatory_aspect.text)
+
         return result
 
     def __get_properties_node_index(self, data_node: Element) -> int:
@@ -515,6 +516,76 @@ class ContentModelFileService(XmlFileService):
 
         return index if index.__lt__(maximum) else (index - 1)
 
+    def get_property(self, content_model: ContentModel, data: DataModel, property_name: str) \
+            -> tuple[str, str, str, str, bool]:
+        namespace: str = self.get_namespace("xmlns")
+        root: Element = self._get_root(content_model.path)
+        filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
+
+        node: Element = root.find(".//{0}{1}s/{0}{1}[@name='{2}:{3}']/{0}properties/{0}property[@name='{2}:{4}']"
+                                  .format(namespace, data.typology, content_model.prefix, data.name, property_name))
+        if node is None:
+            ApiException("There is no property named '{0}' in {1} '{2}' in content model '{3}' in file '{4}'."
+                         .format(property_name, data.typology, data.name, content_model.complete_name, filename))
+
+        title_node: Element = node.find("./{0}title".format(namespace))
+        title: Optional[str] = None if title_node is None else title_node.text
+
+        description_node: Element = node.find("./{0}description".format(namespace))
+        description: Optional[str] = None if description_node is None else description_node.text
+
+        type_node: Element = node.find("./{0}type".format(namespace))
+        typology: Optional[str] = None
+        if type_node is not None:
+            if StringHelper.is_empty(type_node.text):
+                raise ApiException("The type of the {0} property from the content-model '{1}' of file '{2}' is invalid."
+                                   " It cannot be empty or None."
+                                   .format(data.typology, content_model.complete_name,
+                                           FileFolderHelper.extract_filename_from_path(content_model.path)))
+            elif StringHelper.has_space(type_node.text):
+                raise ApiException("The type of the {0} property from the content-model '{1}' of file '{2}' is invalid."
+                                   " There can be no space in it."
+                                   .format(data.typology, content_model.complete_name,
+                                           FileFolderHelper.extract_filename_from_path(content_model.path)))
+            try:
+                typology = type_node.text.rsplit(":", 1)[1]
+                if (typology.__ne__("text") and typology.__ne__("int") and typology.__ne__("long")
+                        and typology.__ne__("float") and typology.__ne__("double") and typology.__ne__("date")
+                        and typology.__ne__("datetime") and typology.__ne__("boolean") and typology.__ne__("encrypted")
+                        and typology.__ne__("noderef")):
+                    raise ApiException(
+                        "The type of the {0} property from the content-model '{1}' of file '{2}' is invalid. Its value"
+                        " must be: text, int, long, float, double, date, datetime, boolean, encrypted or noderef."
+                        .format(data.typology, content_model.complete_name,
+                                FileFolderHelper.extract_filename_from_path(content_model.path)))
+
+            except IndexError:
+                raise ApiException("The value of property type '{0}' of {1} '{2}' of content model '{3}' of file '{4}'"
+                                   " is invalid. It should be formed like this: d:[type]"
+                                   .format(property_name, data.typology, data.name, content_model.complete_name,
+                                           filename))
+
+        mandatory_node: Element = node.find("./{0}mandatory".format(namespace))
+        mandatory: bool = False
+        if mandatory_node is not None:
+
+            if StringHelper.is_empty(mandatory_node.text):
+                raise ApiException("The value of property 'mandatory' '{0}' of {1} {2} of content model {3} of file "
+                                   "{4} is invalid. A value must be set ('true' or 'false').")
+
+            elif mandatory_node.text.__eq__("true"):
+                mandatory = True
+
+            elif mandatory_node.text.__eq__("false"):
+                mandatory = False
+            else:
+                raise ApiException("The value of property 'mandatory' '{0}' of {1} {2} of content model {3} of file "
+                                   "{4} is invalid. The value can only be 'true' or 'false'."
+                                   .format(property_name, data.typology, data.name, content_model.complete_name,
+                                           filename))
+
+        return property_name, title, description, typology, mandatory
+
     def get_properties(self, content_model: ContentModel) -> list[str]:
         result: list[str] = []
         filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
@@ -525,4 +596,25 @@ class ContentModelFileService(XmlFileService):
         for prop in root.findall(".//{0}types/{0}type/{0}properties/{0}property".format(
                 self.get_namespace("xmlns"))):
             result.append(self.__extract_property_name(prop, filename))
+        return result
+
+    def get_data_property_names(self, content_model: ContentModel, data: DataModel) -> list[str]:
+        """
+        Retrieve a list of property names from a data model.
+        :param content_model: A data model of a content-model.
+        :param data:
+        :return:
+        """
+        # Result initialization.
+        result: list[str] = []
+        # Retrieving model properties.
+        namespace: str = self.get_namespace("xmlns")
+        root: Element = self._get_root(content_model.path)
+        filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
+        properties: list[Element] = root.findall(".//{0}{1}s/{0}{1}[@name='{2}:{3}']/{0}properties/{0}property"
+                                                 .format(namespace, data.typology, content_model.prefix, data.name))
+        # Extract property names.
+        for prop in properties:
+            result.append(self.__extract_property_name(prop, filename))
+        # Return of the result.
         return result

@@ -1,3 +1,6 @@
+from api.mvc.model.data.aspect_model import AspectModel
+
+
 class ContentModel:
     """
     Data model for a content_model.
@@ -13,16 +16,16 @@ class ContentModel:
         self.name: str = name
         self.path: str = path
         self.prefix: str = prefix
-        # self.aspects: list[AspectModel] = []
+        self.aspects: list[AspectModel] = []
         # self.types: dict[str, TypeModel] = {}
         self.complete_name = "{0}:{1}".format(prefix, name)
 
-    # def add_aspect(self, aspect: AspectModel):
-    #     """
-    #     Add an aspect in the model.
-    #     :param aspect: The aspect to add to the model.
-    #     """
-    #     self.aspects.append(aspect)
+    def add_aspect(self, aspect: AspectModel):
+        """
+        Add an aspect in the model.
+        :param aspect: The aspect to add to the model.
+        """
+        self.aspects.append(aspect)
 
     # def has_aspect(self, name: str) -> bool:
     #     """

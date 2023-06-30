@@ -45,3 +45,11 @@ class ProjectService(Service, ABC):
         self._ms.new_manual("new", "Creates a new Alfresco All-In-One project.")
         self._ms.add_call()
         self._ms.save()
+
+    def __new_manual(self):
+        """
+        Add the load project command in manual.
+        """
+        self._ms.new_manual("load", "Load an Alfresco All-In-One project.")
+        self._ms.add_call()
+        self._ms.save()

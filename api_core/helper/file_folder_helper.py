@@ -2,11 +2,24 @@ from __future__ import annotations
 
 import os
 
+from api_core.exception.api_exception import ApiException
+
 
 class FileFolderHelper:
     """
     Helper class for files and folders.
     """
+
+    @staticmethod
+    def list_folder(path: str) -> list[str]:
+        """
+        List the contents of a folder.
+        :param path: The absolute path to the folder.
+        :return: The list of folder contents.
+        """
+        if not FileFolderHelper.is_folder_exists(path):
+            raise ApiException("The folder whose contents must be listed ({0}) does not exist.".format(path))
+        return os.listdir(path)
 
     @staticmethod
     def extract_folder_from_filepath(filepath: str) -> str:

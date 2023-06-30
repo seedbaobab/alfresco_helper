@@ -94,12 +94,32 @@ class AspectController(DataController, IAspectController, ABC):
         :param name: The aspect name.
         :return: The data model of an aspect.
         """
-        self._view.info("Retrieving the aspect data model.")
+        # self._view.info("Retrieving the aspect '{0}' data model.".format(name))
         return self._get(content_model, DataType.ASPECT.value, name)
+
+    def load_aspect(self, content_model: ContentModel, name: str) -> AspectModel:
+        """
+        Load the appearance of a content-model.
+        :param content_model: The aspect's content-model.
+        :param name: The aspect name.
+        :return: The data model of an aspect.
+        """
+        self._view.info("Loading aspect '{0}'.".format(name))
+        aspect = self.get_aspect(content_model, name)
+        self._view.success("Aspect '{0}' was successfully loaded.".format(name))
+        return aspect
 
     def _check_mandatory_aspects(self, content_model: ContentModel, source: str, complete_name: Optional[str],
                                  ancestors: list[str], mandatory: list[str]) -> list[str]:
-
+        """
+        Check the mandatory aspects of the agent.
+        :param content_model: The aspect's content-model.
+        :param source: The name of the source aspect.
+        :param complete_name: The full name of the aspect.
+        :param ancestors: The list of ancestors of the source aspect.
+        :param mandatory: The list of current mandatory aspects.
+        :return: The list of mandatory aspects.
+        """
         if complete_name is None:
             mandatory.pop(0)
             return mandatory

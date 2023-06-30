@@ -17,3 +17,7 @@ class PropertyModel:
         self.__typology: str = typology
         self.__mandatory: bool = mandatory
         self.__description: str = description
+
+    @property
+    def name(self) -> str:
+        return self.__name

@@ -2,6 +2,7 @@ import os
 import re
 from typing import Optional
 
+from api.mvc.controller.content_model.i_content_model_controller import IContentModelController
 from api.mvc.controller.project.i_project_controller import IProjectController
 from api.mvc.model.data.project_model import ProjectModel
 from api.mvc.model.service.data.project_service import ProjectService
@@ -26,6 +27,15 @@ class ProjectController(Controller, IProjectController):
         """
         super().__init__("project", ProjectService(), ProjectView(ConstantHelper.SCREEN_SIZE))
         self.__ps: PomService = PomService()
+        self.__cmc: Optional[IContentModelController] = None
+
+    @property
+    def content_model_controller(self):
+        return self.__cmc
+
+    @content_model_controller.setter
+    def content_model_controller(self, value: IContentModelController):
+        self.__cmc = value
 
     def new(self):
         """
@@ -135,3 +145,18 @@ class ProjectController(Controller, IProjectController):
         elif re.match("[a-z0-9\-]+$", value) is None:
             raise ApiException("The AIO project artifact ID cannot contain special characters or upper case (example "
                                "of a valid artifact id name: 'display-of-acts').")
+
+    def load(self):
+        """
+        Loads and generates the necessary project files.
+        """
+        project: ProjectModel = self.get_project()
+        self._view.info("Loading project {0}.".format(project.artifact_id))
+        # Verify that the folder exists.
+        if not FileFolderHelper.is_folder_exists(project.content_model_folder):
+            raise ApiException("The folder that contain the content model files does not exist ({0})."
+                               .format(project.content_model_relative_folder_path))
+        # Loading content-models.
+        for content in FileFolderHelper.list_folder(project.content_model_folder):
+            project.add_content_model(self.__cmc.load_content_model(
+                project, "{0}{1}{2}".format(project.content_model_folder, os.sep, content)))

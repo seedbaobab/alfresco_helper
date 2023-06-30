@@ -5,12 +5,13 @@ from typing import Optional
 
 from api.mvc.controller.content_model.i_content_model_controller import IContentModelController
 from api.mvc.controller.project.i_project_controller import IProjectController
+from api.mvc.controller.property.i_property_controller import IPropertyController
 from api.mvc.model.data.aspect_model import AspectModel
 from api.mvc.model.data.content_model import ContentModel
 from api.mvc.model.data.data_model import DataModel
 from api.mvc.model.data.data_type import DataType
+from api.mvc.model.data.property_model import PropertyModel
 from api.mvc.model.data.type_model import TypeModel
-from api.mvc.model.service.data.aspect_service import AspectService
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
 from api_core.exception.api_exception import ApiException
 from api_core.helper.file_folder_helper import FileFolderHelper
@@ -32,11 +33,20 @@ class DataController(Controller, ABC):
         :param view: The controller's view.
         :param pc: A project controller.
         :param cmc: A content model controller.
+        :param prc: A property controller.
         """
         super().__init__(name, service, view)
         self._pc: IProjectController = pc
         self._cmc: IContentModelController = cmc
+        self._prc: Optional[IPropertyController] = None
         self._cmfs: ContentModelFileService = ContentModelFileService()
+
+    def set_property_controller(self, value: IPropertyController):
+        """
+        Change value of class property '_rpc'
+        :param value: The new value of the '_rpc' class property.
+        """
+        self._prc = value
 
     def _get(self, content_model: ContentModel, data_type: str, name: str) -> Optional[DataModel]:
         """
@@ -75,13 +85,45 @@ class DataController(Controller, ABC):
         data.parent = self._get(content_model, self._cmfs.get_data_parent(content_model, data_type, name), name)
 
         # Set the data mandatory aspects.
-        if data_type.__eq__(DataType.TYPE.value):
-            for mandatory_aspect in self._cmfs.get_type_mandatory_aspects(content_model, name):
-                data.add_mandatory_aspect(self._get(content_model, DataType.ASPECT.value, mandatory_aspect))
-        else:
-            for mandatory_aspect in self._cmfs.get_aspect_mandatory_aspects(content_model, name):
-                data.add_mandatory_aspect(self._get(content_model, DataType.ASPECT.value, mandatory_aspect))
+        try:
+            if data_type.__eq__(DataType.TYPE.value):
+                for mandatory_aspect in self._cmfs.get_type_mandatory_aspects(content_model, name):
+                    data.add_mandatory_aspect(self._get(content_model, DataType.ASPECT.value,
+                                                        mandatory_aspect.rsplit(":", 1)[1]))
 
+            else:
+                for mandatory_aspect in self._cmfs.get_aspect_mandatory_aspects(content_model, name):
+                    data.add_mandatory_aspect(self._get(content_model, DataType.ASPECT.value,
+                                                        mandatory_aspect.rsplit(":", 1)[1]))
+        except IndexError:
+            raise ApiException("A mandatory aspect value of {0} '{1}' of content model '{2}' in file '{3}' is not "
+                               "valid. Its be formed this way: prefix:name."
+                               .format(data_type, name, content_model.complete_name, filename))
+
+        # Recovery of properties.
+        properties: list[str] = self._cmfs.get_data_property_names(content_model, data)
+
+        index: int = 0
+        property_found: bool = False
+        maximum: int = len(properties)
+        prop: Optional[PropertyModel] = None
+
+        while index.__lt__(maximum) and not property_found:
+            # Recovery of a property.
+            prop = self._prc.load_property(content_model, data, properties[index])
+            # Verification that a property is not declared twice.
+            (property_found, data_name) = self.is_property_exist(data, data, prop)
+            # Not declare = addition in the data model.
+            if not property_found:
+                data.add_property(prop)
+                index += 1
+
+        # property found = Declare twice = error
+        if property_found:
+            raise ApiException("Property '{0}' is defined twice in {1} '{2}' of content model '{3}' of file '{4}'."
+                               .format(prop.name, data.typology, data.name, content_model.complete_name, filename))
+
+        # Return the data
         return data
 
     def _extend(self, content_model: ContentModel, data_type: str, source_name: str, parent_name: str):
@@ -92,7 +134,6 @@ class DataController(Controller, ABC):
         :param source_name: The name of the data to expand.
         :param parent_name: The name of the parent data.
         """
-        service: AspectService = self._service
         source: DataModel = self._get(content_model, data_type, source_name)
         parent: DataModel = self._get(content_model, data_type, parent_name)
         filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
@@ -107,7 +148,7 @@ class DataController(Controller, ABC):
         self.__check_data_link(content_model, data_type, source, parent)
         self.__check_data_link(content_model, data_type, parent, source)
 
-        service.extend(content_model, source, parent)
+        self._service.extend(content_model, source, parent)
 
     def _add_mandatory(self, content_model: ContentModel, data_type: str, source_name: str, mandatory_name: str):
         """
@@ -185,3 +226,30 @@ class DataController(Controller, ABC):
     def _check_mandatory_aspects(self, content_model: ContentModel, source: str, complete_name: Optional[str],
                                  ancestors: list[str], mandatory: list[str]) -> list[str]:
         pass
+
+    def is_property_exist(self, data_source: DataModel, data: DataModel, property_model: PropertyModel) \
+            -> tuple[bool, Optional[str]]:
+        if data.parent is not None:
+            self.is_property_exist(data_source, data.parent, property_model)
+
+        index: int = 0
+        maximum: int = len(data.properties)
+        while index.__lt__(maximum) and data.properties[index].name.__ne__(property_model.name):
+            index += 1
+
+        if index.__ne__(maximum):
+            return True, data.name
+
+        success: bool = False
+        index = 0
+        maximum = len(data.mandatory)
+        while index.__lt__(maximum) and not success:
+            (success, data_model) = self.is_property_exist(data_source, data.mandatory[index], property_model)
+            if not success:
+                index += 1
+
+        if index.__ne__(maximum):
+            return True, data.name
+
+        return False, None
+

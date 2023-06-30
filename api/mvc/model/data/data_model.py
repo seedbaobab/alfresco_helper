@@ -22,8 +22,8 @@ class DataModel:
         self.__typology: DataType = typology
         self._mandatory: list[DataModel] = []
         self.__parent: Optional[DataModel] = None
-        self.__properties: list[PropertyModel] = []
         self.__description: Optional[str] = description
+        self.__properties: list[PropertyModel] = []
 
     @property
     def name(self) -> str:
@@ -68,6 +68,10 @@ class DataModel:
     @parent.setter
     def parent(self, value):
         self.__parent = value
+
+    @property
+    def mandatory(self):
+        return self._mandatory
 
     def add_property(self, property_model: PropertyModel):
         """

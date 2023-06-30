@@ -27,6 +27,11 @@ class AlfrescoHelperApi(Api, ABC):
         tc: TypeController = TypeController(pc, cmc)
         ppc: PropertyController = PropertyController(pc, cmc, ac, tc)
 
+        pc.content_model_controller = cmc
+        cmc.aspect_controller = ac
+        ac.set_property_controller(ppc)
+        tc.set_property_controller(ppc)
+
         self.service.add(pc)
         self.service.add(cmc)
         self.service.add(ac)
@@ -119,10 +124,13 @@ class AlfrescoHelperApi(Api, ABC):
 
         # Access to the model commands manual.
         elif command.__eq__("man"):
+
             if len(arguments).__eq__(1):
                 controller.man(arguments[0])
+
             elif len(arguments).__eq__(0):
                 controller.man()
+
         else:
             raise ApiException("The command '{0}_{1}' has been defined but not implemented.".format(command, "project"))
 
@@ -159,10 +167,15 @@ class AlfrescoHelperApi(Api, ABC):
         if command.__eq__("new"):
             controller.new()
 
+        elif command.__eq__("load"):
+            controller.load()
+
         # Access to the project orders manual.
         elif command.__eq__("man"):
+
             if len(arguments).__eq__(1):
                 controller.man(arguments[0])
+
             elif len(arguments).__eq__(0):
                 controller.man()
         else:

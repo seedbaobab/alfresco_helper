@@ -3,6 +3,7 @@ import re
 from abc import ABC
 from typing import Optional
 
+from api.mvc.controller.aspect.i_aspect_controller import IAspectController
 from api.mvc.controller.content_model.i_content_model_controller import IContentModelController
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
 from api.mvc.model.service.data.content_model_service import ContentModelService
@@ -31,7 +32,16 @@ class ContentModelController(Controller, IContentModelController, ABC):
         super().__init__("model", ContentModelService(api_template_folder),
                          ContentModelView(ConstantHelper.SCREEN_SIZE))
         self.__pc: IProjectController = pc
+        self.__as: Optional[IAspectController] = None
         self.cmfs: ContentModelFileService = ContentModelFileService()
+
+    @property
+    def aspect_controller(self) -> IAspectController:
+        return self.__as
+
+    @aspect_controller.setter
+    def aspect_controller(self, value: IAspectController):
+        self.__as = value
 
     def new(self):
         """
@@ -82,6 +92,24 @@ class ContentModelController(Controller, IContentModelController, ABC):
             raise ApiException("There is no content model named '{0}' in the project.".format(content_model))
 
         return ContentModel(prefix, name, filepath)
+
+    def load_content_model(self, project: ProjectModel, content_model_file_path: str) -> ContentModel:
+        """
+        Loads a content model by its file.
+        :param project: The content-model's project.
+        :param content_model_file_path: The absolute path to the content model file.
+        :return: The data model of an Alfresco AIO project.
+        """
+        prefix: str = self.cmfs.extract_content_model_prefix(content_model_file_path)
+        name: str = self.cmfs.extract_content_model_name(content_model_file_path)
+
+        self._view.info("Loading content model '{0}:{1}'.".format(prefix, name))
+        content_model: ContentModel = self.get_content_model(project, "{0}:{1}".format(prefix, name))
+        for aspect in self.cmfs.get_aspects_name(content_model):
+            content_model.add_aspect(self.__as.load_aspect(content_model, aspect))
+
+        self._view.success("Content model '{0}:{1}' was loaded successfully.")
+        return content_model
 
     def __is_content_model_exists(self, project: ProjectModel, prefix: str, name: str) -> tuple[bool, str]:
         """

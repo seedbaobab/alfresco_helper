@@ -76,8 +76,8 @@ class ContentModelService(Service, ABC):
         maximum: int = len(contents)
 
         while index.__lt__(maximum) and cm_name is None:
-            if self.__cmfs.extract_content_model_name("{1}{0}{2}".format(os.sep, project.content_model_folder, contents[index])) \
-                    .__eq__(name):
+            if self.__cmfs.extract_content_model_name("{1}{0}{2}".format(os.sep, project.content_model_folder,
+                                                                         contents[index])).__eq__(name):
                 cm_name = contents[index]
             else:
                 index += 1

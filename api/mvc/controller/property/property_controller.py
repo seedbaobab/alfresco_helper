@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import re
+from abc import ABC
 from typing import Optional
 
 from api.mvc.controller.aspect.i_aspect_controller import IAspectController
 from api.mvc.controller.content_model.i_content_model_controller import IContentModelController
 from api.mvc.controller.project.i_project_controller import IProjectController
+from api.mvc.controller.property.i_property_controller import IPropertyController
 from api.mvc.controller.type.i_type_controller import ITypeController
 from api.mvc.model.data.aspect_model import AspectModel
 from api.mvc.model.data.content_model import ContentModel
@@ -24,7 +26,7 @@ from api_core.mvc.controller.controller import Controller
 from api_core.mvc.view.view import View
 
 
-class PropertyController(Controller):
+class PropertyController(Controller, IPropertyController, ABC):
 
     def __init__(self, pc: IProjectController, cmc: IContentModelController, ac: IAspectController,
                  tc: ITypeController):
@@ -61,6 +63,23 @@ class PropertyController(Controller):
 
         service.new(content_model, data, name, title, description, typology, mandatory)
         self._view.success("Property '{0}' was successfully created.".format(data_name))
+
+    def load_property(self, content_model: ContentModel, data: DataModel, property_name: str) -> PropertyModel:
+        """
+        Loads a property from a data model.
+        :param content_model: The data's content-model.
+        :param data: The owner data of the property.
+        :param property_name: The property name.
+        :return: A data model for the property.
+        """
+        filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
+        self._view.info("Loading the property {0} from {1} {2} of content-model {3} ({4} file)"
+                        .format(property_name, data.typology, data.name, content_model.complete_name, filename))
+        (name, title, description, typology, mandatory) = self.__cmfs.get_property(content_model, data, property_name)
+        prop: PropertyModel = PropertyModel(name, title, description, mandatory, typology)
+        self._view.success("The property {0} from {1} {2} of content-model {3} ({4} file) was successfully loaded."
+                           .format(property_name, data.typology, data.name, content_model.complete_name, filename))
+        return prop
 
     @staticmethod
     def __check_name(value: str):
