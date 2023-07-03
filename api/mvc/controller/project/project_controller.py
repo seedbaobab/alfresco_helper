@@ -154,6 +154,7 @@ class ProjectController(Controller, IProjectController):
         Loads and generates the necessary project files.
         """
         project: ProjectModel = self.get_project(None, False)
+        service: ProjectService = self._service
         self._view.info("Loading project {0}.".format(project.artifact_id))
         # Verify that the folder exists.
         if not FileFolderHelper.is_folder_exists(project.content_model_folder):
@@ -166,8 +167,19 @@ class ProjectController(Controller, IProjectController):
 
         self._view.success("The project '{0}' has been loaded successfully.".format(project.artifact_id))
 
+        # Project reset.
+        self.reset()
+
         # Display on the output console of the file writing message.
         self._view.info("File generation")
         for content_model in project.content_models:
             self.__cmc.generate_platform_message_file(content_model)
             self.__cmc.add_content_model_in_bootstrap(project, content_model)
+
+            self.__cmc.generate_share_message_file(content_model)
+
+    def reset(self):
+        self._view.info("Resetting project.")
+        service: ProjectService = self._service
+        service.reset(self.get_project(None, False))
+        self._view.success("The project reset was successful.")

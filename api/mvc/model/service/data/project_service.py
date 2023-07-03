@@ -1,6 +1,12 @@
 import subprocess
 from abc import ABC
 
+from api.mvc.model.data.project_model import ProjectModel
+from api.mvc.model.service.file.bootstrap_service import BootstrapFileService
+from api.mvc.model.service.file.service_context_service import ServiceContextFileService
+from api.mvc.model.service.file.share_config_service import ShareConfigFileService
+from api.mvc.model.service.file.webscript_service import WebScriptFileService
+from api_core.helper.file_folder_helper import FileFolderHelper
 from api_core.mvc.service.model.service import Service
 
 
@@ -11,6 +17,10 @@ class ProjectService(Service, ABC):
 
     def __init__(self):
         super().__init__("project")
+        self.__bfs: BootstrapFileService = BootstrapFileService()
+        self.__wsfs: WebScriptFileService = WebScriptFileService()
+        self.__scfs: ShareConfigFileService = ShareConfigFileService()
+        self.__sctxtfs: ServiceContextFileService = ServiceContextFileService()
 
     @staticmethod
     def new(sdk: str, group_id: str, artifact_id: str) -> tuple[int, str, str]:
@@ -32,11 +42,34 @@ class ProjectService(Service, ABC):
         (out, err) = child_process.communicate()
         return child_process.returncode, out, err
 
+    def reset(self, project: ProjectModel):
+        self.__bfs.reset(project)
+        self.__scfs.reset(project)
+        self.__wsfs.reset(project)
+        self.__sctxtfs.reset(project)
+
+        FileFolderHelper.remove_content(project.share_message_folder)
+
+    def raz(self, project: ProjectModel):
+        self.reset(project)
+
+        FileFolderHelper.remove_folder(project.integration_tests_filepath)
+        FileFolderHelper.remove_folder(project.platform_extension_folder)
+
+        FileFolderHelper.remove_content(project.share_site_data_extension)
+        FileFolderHelper.remove_content(project.platform_java_folder)
+        FileFolderHelper.remove_content(project.content_model_folder)
+        FileFolderHelper.remove_content(project.workflow_process_folder)
+        FileFolderHelper.remove_content(project.content_model_message_absolute_folder_path)
+
     def init_manual(self):
         """
         Initializes the service manual.
         """
         self.__new_manual()
+        self.__load_manual()
+        self.__raz_manual()
+        self.__reset_manual()
 
     def __new_manual(self):
         """
@@ -46,10 +79,26 @@ class ProjectService(Service, ABC):
         self._ms.add_call()
         self._ms.save()
 
-    def __new_manual(self):
+    def __load_manual(self):
         """
         Add the load project command in manual.
         """
         self._ms.new_manual("load", "Load an Alfresco All-In-One project.")
+        self._ms.add_call()
+        self._ms.save()
+
+    def __reset_manual(self):
+        """
+        Add the reset project command in manual.
+        """
+        self._ms.new_manual("reset", "Reset a Alfresco All-In-One project.")
+        self._ms.add_call()
+        self._ms.save()
+
+    def __raz_manual(self):
+        """
+        Add the raz project command in manual.
+        """
+        self._ms.new_manual("raz", "Reset to zero a Alfresco All-In-One project.")
         self._ms.add_call()
         self._ms.save()

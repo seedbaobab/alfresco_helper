@@ -25,3 +25,8 @@ class IPropertyController(ABC):
     def get_property_definition_platform_message_file(self, content_model: ContentModel,
                                                       property_model: PropertyModel) -> str:
         pass
+
+    @abstractmethod
+    def get_property_definition_share_message_file(self, content_model: ContentModel, property_model: PropertyModel) \
+            -> str:
+        pass
