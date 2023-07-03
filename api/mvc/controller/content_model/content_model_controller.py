@@ -5,6 +5,8 @@ from typing import Optional
 
 from api.mvc.controller.aspect.i_aspect_controller import IAspectController
 from api.mvc.controller.content_model.i_content_model_controller import IContentModelController
+from api.mvc.model.data.aspect_model import AspectModel
+from api.mvc.model.service.file.bootstrap_service import BootstrapFileService
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
 from api.mvc.model.service.data.content_model_service import ContentModelService
 from api.mvc.controller.project.i_project_controller import IProjectController
@@ -33,6 +35,7 @@ class ContentModelController(Controller, IContentModelController, ABC):
                          ContentModelView(ConstantHelper.SCREEN_SIZE))
         self.__pc: IProjectController = pc
         self.__as: Optional[IAspectController] = None
+        self.__bfs: BootstrapFileService = BootstrapFileService()
         self.cmfs: ContentModelFileService = ContentModelFileService()
 
     @property
@@ -76,22 +79,28 @@ class ContentModelController(Controller, IContentModelController, ABC):
                    .format(content_model.complete_name,
                            FileFolderHelper.extract_filename_from_path(content_model.path)))
 
-    def get_content_model(self, project: ProjectModel, content_model: str) -> ContentModel:
+    def get_content_model(self, project: ProjectModel, content_model: str, verbose: bool = True) -> ContentModel:
         """
         Retrieves the data model of an Alfresco AIO project.
         :param project: The content-model's project.
         :param content_model: The content-model complete name (prefix:name) of the Alfresco AIO project.
+        :param verbose: Indicates whether notification messages are displayed or not.
         :return: The data model of an Alfresco AIO project.
         """
-        self._view.info("Retrieving the content-model data model.")
+        if verbose:
+            self._view.info("Retrieving the content-model data model.")
+
         name: str = self.__extract_name(content_model)
         prefix: str = self.__extract_prefix(content_model)
         (content_model_exists, filepath) = self.__is_content_model_exists(project, prefix, name)
 
         if not content_model_exists:
-            raise ApiException("There is no content model named '{0}' in the project.".format(content_model))
+            raise ApiException("There is no content-model named '{0}' in the project.".format(content_model))
 
-        return ContentModel(prefix, name, filepath)
+        if verbose:
+            self._view.success("Content-model '{0}' was successfully retrieved.".format(content_model))
+
+        return ContentModel(project, prefix, name, filepath)
 
     def load_content_model(self, project: ProjectModel, content_model_file_path: str) -> ContentModel:
         """
@@ -104,12 +113,49 @@ class ContentModelController(Controller, IContentModelController, ABC):
         name: str = self.cmfs.extract_content_model_name(content_model_file_path)
 
         self._view.info("Loading content model '{0}:{1}'.".format(prefix, name))
-        content_model: ContentModel = self.get_content_model(project, "{0}:{1}".format(prefix, name))
+        content_model: ContentModel = self.get_content_model(project, "{0}:{1}".format(prefix, name), False)
         for aspect in self.cmfs.get_aspects_name(content_model):
             content_model.add_aspect(self.__as.load_aspect(content_model, aspect))
 
-        self._view.success("Content model '{0}:{1}' was loaded successfully.")
+        self._view.success("Content model '{0}' was loaded successfully.".format(content_model.complete_name))
         return content_model
+
+    def generate_platform_message_file(self, content_model: ContentModel):
+        # File name retrieval for error message purposes.
+        filename: str = FileFolderHelper.extract_filename_from_path(content_model.platform_message_file_path)
+        # Display on the output console of an appropriate message.
+        self._view.info("Generating message file '{0}' from content model '{1}'."
+                        .format(filename, content_model.complete_name))
+        #
+        content: str = "# This file must contain tags from the content model '{0}' ('{1}')\n\n" \
+            .format(content_model.name, content_model.complete_name)
+
+        # Retrieval of aspect properties.
+        for aspect in content_model.aspects:
+            content += self.__as.get_aspect_definition_platform_message_file(content_model, aspect)
+
+        # Writing file.
+        if len(content_model.aspects).__gt__(0):
+            FileFolderHelper.write_file(content_model.platform_message_file_path, content)
+            self._view.success("Generation of message file '{0}' for content model '{1}' was successful."
+                               .format(filename, content_model.complete_name))
+        else:
+            self._view.success("No file generated because the content model is empty.")
+
+    def add_content_model_in_bootstrap(self, project: ProjectModel, content_model: ContentModel):
+        """
+        Adds the content model to the bootstrap file.
+        :param project: The content-model's project.
+        :param content_model: The content-model complete name of the Alfresco AIO project.
+        """
+        self._view.info("Adding content model '{0}' in bootstrap file.".format(content_model.complete_name))
+        # Added content model in bootstrap file.
+        self.__bfs.add_content_model(project, content_model)
+        # Added content model 'message' file in bootstrap file.
+        if FileFolderHelper.is_file_exists(content_model.platform_message_file_path):
+            self.__bfs.add_message_content_model(project, content_model)
+        self._view.success(
+            "Successfully added content model '{0}' to bootstrap file.".format(content_model.complete_name))
 
     def __is_content_model_exists(self, project: ProjectModel, prefix: str, name: str) -> tuple[bool, str]:
         """
@@ -126,7 +172,8 @@ class ContentModelController(Controller, IContentModelController, ABC):
         maximum: int = len(contents)
         while index.__lt__(maximum) and cm_filepath is None:
             filepath: str = "{0}{1}{2}".format(project.content_model_folder, os.sep, contents[index])
-            if prefix.__eq__(self.cmfs.extract_content_model_prefix(filepath)) and name.__eq__(self.cmfs.extract_content_model_name(filepath)):
+            if prefix.__eq__(self.cmfs.extract_content_model_prefix(filepath)) and \
+                    name.__eq__(self.cmfs.extract_content_model_name(filepath)):
                 cm_filepath = filepath
             else:
                 index += 1

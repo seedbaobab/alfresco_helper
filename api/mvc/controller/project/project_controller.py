@@ -69,13 +69,16 @@ class ProjectController(Controller, IProjectController):
         self._view.success("Alfresco All-In-one project '{0}.{1}' created with SDK version {2}."
                            .format(group_id, artifact_id, sdk))
 
-    def get_project(self, artifact_id: Optional[str] = None) -> ProjectModel:
+    def get_project(self, artifact_id: Optional[str] = None, verbose: bool = True) -> ProjectModel:
         """
         Retrieves the data model of an Alfresco AIO project.
         :param artifact_id: The artifact id of the Alfresco AIO project.
+        :param verbose: Indicates whether notification messages are displayed or not.
         :return: The data model of an Alfresco AIO project.
         """
-        self._view.info("Retrieving the project data model.")
+        if verbose:
+            self._view.info("Retrieving the project data model.")
+
         project_path: str = os.getcwd() if artifact_id is None else "{1}{0}{2}".format(os.sep, os.getcwd(), artifact_id)
         pom_path: str = "{1}{0}pom.xml".format(os.sep, project_path)
 
@@ -104,7 +107,7 @@ class ProjectController(Controller, IProjectController):
         elif StringHelper.has_space(value):
             raise ApiException("The SDK version of the AIO project cannot contain spaces.")
 
-        # Check if it has the good version.
+        # Check if it has a good version.
         elif re.match("(?:(\d+\.(?:\d+\.)*\d+))", value) is None:
             raise ApiException("The SDK version of the AIO project is invalid (example of valid one: 3.4.0).")
 
@@ -122,7 +125,7 @@ class ProjectController(Controller, IProjectController):
         elif StringHelper.has_space(value):
             raise ApiException("The group id of the AIO project cannot contain spaces.")
 
-        # Check if it has the good version.
+        # Check if it has a good version.
         elif re.match("[a-z0-9\-]+$", value) is None:
             raise ApiException("The group id cannot contain special characters or upper case  "
                                "(example of group id name: 'conseil-departemental-59').")
@@ -150,7 +153,7 @@ class ProjectController(Controller, IProjectController):
         """
         Loads and generates the necessary project files.
         """
-        project: ProjectModel = self.get_project()
+        project: ProjectModel = self.get_project(None, False)
         self._view.info("Loading project {0}.".format(project.artifact_id))
         # Verify that the folder exists.
         if not FileFolderHelper.is_folder_exists(project.content_model_folder):
@@ -160,3 +163,11 @@ class ProjectController(Controller, IProjectController):
         for content in FileFolderHelper.list_folder(project.content_model_folder):
             project.add_content_model(self.__cmc.load_content_model(
                 project, "{0}{1}{2}".format(project.content_model_folder, os.sep, content)))
+
+        self._view.success("The project '{0}' has been loaded successfully.".format(project.artifact_id))
+
+        # Display on the output console of the file writing message.
+        self._view.info("File generation")
+        for content_model in project.content_models:
+            self.__cmc.generate_platform_message_file(content_model)
+            self.__cmc.add_content_model_in_bootstrap(project, content_model)

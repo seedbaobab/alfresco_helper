@@ -79,3 +79,6 @@ class DataModel:
         :param property_model: The property to add to the property.
         """
         self.__properties.append(property_model)
+
+    def to_str(self) -> str:
+        return "NAME: {0}\nTITLE: {1}\nTYPE: {2}".format(self.name, self.title, self.typology)

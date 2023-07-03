@@ -21,3 +21,11 @@ class PropertyModel:
     @property
     def name(self) -> str:
         return self.__name
+
+    @property
+    def title(self) -> str:
+        return self.__title
+
+    @property
+    def typology(self) -> str:
+        return self.__typology

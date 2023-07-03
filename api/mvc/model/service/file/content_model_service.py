@@ -350,7 +350,7 @@ class ContentModelFileService(XmlFileService):
         :param name: The name of the aspect node.
         :return: The value of the aspect's title node.
         """
-        return self.__get_data_title(content_model, DataType.ASPECT.name, name)
+        return self.__get_data_title(content_model, DataType.ASPECT.value, name)
 
     def get_aspect_parent(self, content_model: ContentModel, name: str) -> Optional[str]:
         """

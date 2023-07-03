@@ -1,8 +1,10 @@
 from abc import ABC
 
+from api.mvc.model.data.aspect_model import AspectModel
 from api.mvc.model.data.content_model import ContentModel
 from api.mvc.model.data.data_model import DataModel
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
+from api_core.helper.string_helper import StringHelper
 from api_core.mvc.service.model.service import Service
 
 
@@ -65,3 +67,23 @@ class AspectService(Service, ABC):
         self._ms.add_argument("aspect_name", "The name of the aspect whose parent must be modified", "str")
         self._ms.add_argument("mandatory_aspect_name", "The name of the new mandatory aspect.", "str")
         self._ms.save()
+
+    @staticmethod
+    def get_definition_platform_message_file(content_model: ContentModel, aspect: AspectModel) -> str:
+        # Result initialization.
+        result: str = ""
+        # Verification that the aspect has a title to display.
+        has_no_title: bool = StringHelper.is_empty(aspect.title)
+
+        # Verification of the need to retrieve the necessary information.
+        if has_no_title and len(aspect.properties).__eq__(0):
+            return result
+
+        # Comment to introduce the aspect.
+        result += "# Labels for aspect '{0}'.\n".format(aspect.name)
+        # Definition of the aspect title.
+        if not has_no_title:
+            result += "{0}_{1}.{2}.{0}_{3}.title={4}\n\n".format(content_model.prefix, content_model.name,
+                                                                 aspect.typology, aspect.name, aspect.title)
+
+        return result

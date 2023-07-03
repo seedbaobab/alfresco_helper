@@ -104,10 +104,40 @@ class AspectController(DataController, IAspectController, ABC):
         :param name: The aspect name.
         :return: The data model of an aspect.
         """
-        self._view.info("Loading aspect '{0}'.".format(name))
+        filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
+        self._view.info("Loading aspect '{0}' of content model '{1}' from file '{2}'."
+                        .format(name, content_model.complete_name, filename))
         aspect = self.get_aspect(content_model, name)
-        self._view.success("Aspect '{0}' was successfully loaded.".format(name))
+        self._view.success("Aspect '{0}' of content model '{1}' in file '{2}' was loaded successfully."
+                           .format(name, content_model.complete_name, filename))
         return aspect
+
+    def get_aspect_definition_platform_message_file(self, content_model: ContentModel, aspect: AspectModel) -> str:
+        """
+        Retrieves the look definition for the platform project's "messages" file.
+        :param content_model: The aspect content model data model
+        :param aspect: The aspect data model.
+        :return: The definition of the aspect of the content-model.
+        """
+        # Cast the service to specialized service.
+        service: AspectService = self._service
+        # Initialization of the result with the definition of the aspect title.
+        result: str = service.get_definition_platform_message_file(content_model, aspect)
+
+        # Added property introductory comment.
+        if len(aspect.properties).__gt__(0):
+            result += "# Properties of aspect '{0}''.\n".format(aspect.name)
+
+        # Add aspect properties title.
+        for property_model in aspect.properties:
+            result += self._prc.get_property_definition_platform_message_file(content_model, property_model)
+
+        # If the result is not empty: add a '\n' character.
+        if not StringHelper.is_empty(result):
+            result += "\n"
+
+        # Return of the result.
+        return result
 
     def _check_mandatory_aspects(self, content_model: ContentModel, source: str, complete_name: Optional[str],
                                  ancestors: list[str], mandatory: list[str]) -> list[str]:

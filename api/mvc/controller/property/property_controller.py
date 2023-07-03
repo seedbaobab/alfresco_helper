@@ -81,6 +81,15 @@ class PropertyController(Controller, IPropertyController, ABC):
                            .format(property_name, data.typology, data.name, content_model.complete_name, filename))
         return prop
 
+    def get_property_definition_platform_message_file(self, content_model: ContentModel,
+                                                      property_model: PropertyModel) -> str:
+        result: str = ""
+        if not StringHelper.is_empty(property_model.title):
+            result += "{0}_{1}.property.{0}_{2}.title={3}\n"\
+                .format(content_model.prefix, StringHelper.to_camel_case(content_model.name), property_model.name,
+                        property_model.title)
+        return result
+
     @staticmethod
     def __check_name(value: str):
         """

@@ -29,3 +29,6 @@ class IAspectController(ABC):
         :return: The data model of an aspect.
         """
         pass
+
+    def get_aspect_definition_platform_message_file(self, content_model: ContentModel, aspect: AspectModel):
+        pass

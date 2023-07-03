@@ -104,3 +104,12 @@ class FileFolderHelper:
         :return: An array containing file names.
         """
         return [] if not FileFolderHelper.is_folder_exists(folder_path) else os.listdir(folder_path)
+
+    @classmethod
+    def remove_file(cls, filepath: str):
+        """
+        Delete a file.
+        :param filepath: The path to the file.
+        """
+        if FileFolderHelper.is_file_exists(filepath):
+            os.remove(filepath)

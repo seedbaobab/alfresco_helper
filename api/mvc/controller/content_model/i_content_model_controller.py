@@ -10,11 +10,12 @@ class IContentModelController(ABC):
     """
 
     @abstractmethod
-    def get_content_model(self, project: ProjectModel, content_model: str) -> ContentModel:
+    def get_content_model(self, project: ProjectModel, content_model: str, verbose: bool = True) -> ContentModel:
         """
         Retrieves the data model of an Alfresco AIO project.
         :param project: The content-model's project.
         :param content_model: The content-model complete name of the Alfresco AIO project.
+        :param verbose: Indicates whether notification messages are displayed or not.
         :return: The data model of an Alfresco AIO project.
         """
         pass
@@ -26,5 +27,18 @@ class IContentModelController(ABC):
         :param project: The content-model's project.
         :param content_model_file_path: The absolute path to the content model file.
         :return: The data model of an Alfresco AIO project.
+        """
+        pass
+
+    @abstractmethod
+    def generate_platform_message_file(self, content_model: ContentModel):
+        pass
+
+    @abstractmethod
+    def add_content_model_in_bootstrap(self, project: ProjectModel, content_model: ContentModel):
+        """
+        Adds the content model to the bootstrap file.
+        :param project: The content-model's project.
+        :param content_model: The content-model complete name of the Alfresco AIO project.
         """
         pass

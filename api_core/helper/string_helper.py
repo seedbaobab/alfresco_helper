@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 
 
@@ -30,9 +31,12 @@ class StringHelper:
 
     @staticmethod
     def to_camel_case(value: str) -> str:
-        return sub(r"(_|-)+", " ", value).title().replace(" ", "")
+        result: str = re.sub(r"(_|-)+", " ", value)
+        if StringHelper.has_space(result):
+            result = result.title().replace(" ", "")
+        # return re.sub(r"(_|-)+", " ", value).title().replace(" ", "")
+        return result
 
     @staticmethod
     def to_snake_case(value: str) -> str:
-        filename: str = re.sub('([A-Z]{1})', r'-\1', value).lower()
-        return "{0}-model".format(filename)
+        return re.sub('([A-Z]{1})', r'-\1', value)

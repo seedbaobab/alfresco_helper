@@ -20,3 +20,8 @@ class IPropertyController(ABC):
         :return: A data model for the property.
         """
         pass
+
+    @abstractmethod
+    def get_property_definition_platform_message_file(self, content_model: ContentModel,
+                                                      property_model: PropertyModel) -> str:
+        pass
