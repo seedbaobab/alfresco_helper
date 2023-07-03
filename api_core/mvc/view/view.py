@@ -121,7 +121,7 @@ class View:
         :param message: The message to print on the output.
         """
         self.__print_typed_message(MessageType.WARN, message)
-        self.separation()
+        # self.separation()
 
     def __start(self, message: str):
         """
@@ -151,6 +151,8 @@ class View:
                 print(colored("| {0} |".format(line.ljust(self.__maximum_row_width)), "light_red"))
             elif message_type.value.__eq__("SUCCESS"):
                 print(colored("| {0} |".format(line.ljust(self.__maximum_row_width)), "light_green"))
+            elif message_type.value.__eq__("WARNING"):
+                print(colored("| {0} |".format(line.ljust(self.__maximum_row_width)), "light_yellow"))
             elif message_type.value.__ne__("INPUT"):
                 print("| {0} |".format(line.ljust(self.__maximum_row_width)))
             else:
