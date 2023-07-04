@@ -67,7 +67,7 @@ class ShareSlingshotApplicationContext(XmlFileService):
 
     def __get_create_message_bean(self, project: ProjectModel, root: Element) -> tuple[bool, Element]:
         namespace: str = self.get_namespace("xmlns")
-        node: Element = root.find(".//{0}beans[@class='org.springframework.extensions.surf.util."
+        node: Element = root.find(".//{0}bean[@class='org.springframework.extensions.surf.util."
                                   "ResourceBundleBootstrapComponent']".format(namespace))
         if node is None:
             node = Element("bean")
@@ -79,7 +79,7 @@ class ShareSlingshotApplicationContext(XmlFileService):
 
     def __get_create_message_property(self, root: Element) -> tuple[bool, Element]:
         namespace: str = self.get_namespace("xmlns")
-        node: Element = root.find(".//{0}beans[@class='org.springframework.extensions.surf.util."
+        node: Element = root.find(".//{0}bean[@class='org.springframework.extensions.surf.util."
                                   "ResourceBundleBootstrapComponent']/{0}property[@name='resourceBundles']"
                                   .format(namespace))
         if node is None:
@@ -105,7 +105,7 @@ class ShareSlingshotApplicationContext(XmlFileService):
 
     def __get_message_list(self, root: Element) -> Optional[Element]:
         namespace: str = self.get_namespace("xmlns")
-        return root.find(".//{0}beans[@class='org.springframework.extensions.surf.util."
+        return root.find(".//{0}bean[@class='org.springframework.extensions.surf.util."
                          "ResourceBundleBootstrapComponent']/{0}property[@name='resourceBundles']/{0}list"
                          .format(namespace))
 

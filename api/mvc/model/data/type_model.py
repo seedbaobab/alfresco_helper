@@ -19,7 +19,6 @@ class TypeModel(DataModel):
         :param title: The aspect title.
         :param description: The aspect description.
         """
-        super().__init__(icm, name, title, description, DataType.ASPECT)
+        super().__init__(icm, name, title, description, DataType.TYPE)
 
         self.parent = None
-        self.mandatory = []

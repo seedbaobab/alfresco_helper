@@ -32,6 +32,8 @@ class TypeService(Service, ABC):
         Initializes the service manual.
         """
         self.__new_manual()
+        self.__extend_manual()
+        self.__mandatory_manual()
 
     def __new_manual(self):
         """

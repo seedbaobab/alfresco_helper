@@ -8,8 +8,10 @@ from api.mvc.controller.project.i_project_controller import IProjectController
 from api.mvc.controller.property.i_property_controller import IPropertyController
 from api.mvc.model.data.aspect_model import AspectModel
 from api.mvc.model.data.content_model import ContentModel
+from api.mvc.model.data.content_type_model import ContentTypeModel
 from api.mvc.model.data.data_model import DataModel
 from api.mvc.model.data.data_type import DataType
+from api.mvc.model.data.folder_type_model import FolderTypeModel
 from api.mvc.model.data.property_model import PropertyModel
 from api.mvc.model.data.type_model import TypeModel
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
@@ -56,6 +58,13 @@ class DataController(Controller, ABC):
         :param name: The type or aspect name.
         :return: The data model of a type or aspect otherwise None.
         """
+        if data_type.__eq__(DataType.TYPE.value):
+            if name.__eq__("folder"):
+                return FolderTypeModel(content_model)
+
+            elif name.__eq__("content"):
+                return ContentTypeModel(content_model)
+
         filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
 
         # Verification that the type exists.
@@ -180,17 +189,17 @@ class DataController(Controller, ABC):
         self._cmfs.add_mandatory(content_model, source, mandatory)
 
     def __check_data_link(self, content_model: ContentModel, data_type: str, data_1: DataModel, data_2: DataModel):
-        source: str = data_1.name
-        complete_name: str = "{0}:{1}".format(content_model.prefix, source)
+        # source: str = data_1.name
+        # complete_name: str = "{0}:{1}".format(content_model.prefix, source)
 
         filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
-        ancestors: list[str] = self.__check_ancestors(content_model, data_type, source, complete_name, [])
+        ancestors: list[str] = self.__check_ancestors(content_model, data_type, data_1.name, data_1.complete_name, [])
 
         if data_2.name in ancestors:
             raise ApiException("The '{0}' {1} already has the '{2}' {1} for ancestor in the '{3}' file."
                                .format(data_1.name, data_type, data_2.name, filename))
 
-        mandatory: list[str] = self._check_mandatory_aspects(content_model, source, complete_name, ancestors, [])
+        mandatory: list[str] = self._check_mandatory_aspects(content_model, data_1.name, data_1.complete_name, ancestors, [])
 
         if data_2.name in mandatory:
             raise ApiException("The '{0}' {1} already has the '{2}' {1} in the list of mandatory aspects (by "
@@ -199,18 +208,19 @@ class DataController(Controller, ABC):
 
     def __check_ancestors(self, content_model: ContentModel, typology: str, source: str, complete_name: Optional[str],
                           ancestors: list[str]) -> list[str]:
-        if complete_name is None:
+        if complete_name is None or (complete_name.__eq__("cm:folder") or complete_name.__eq__("cm:content")
+                                     and typology.__eq__(DataType.TYPE.value)):
             # Removing the first element, which is the aspect we're trying to get.
             if len(ancestors).__gt__(0):
                 ancestors.pop(0)
-
             return ancestors
 
         name: str = complete_name.rsplit(":", 1)[1]
         if self._cmfs.find_data(content_model, typology, name) is None:
             raise ApiException("There is an inheritance problem. {4} '{0}' inherits {5} '{1}' which does not "
                                "exist in content model '{2}' of file '{3}'.\n"
-                               .format(ancestors[len(ancestors) - 1], name, content_model.complete_name,
+                               .format(ancestors[len(ancestors) - 1 if len(ancestors).__gt__(0) else 0], name,
+                                       content_model.complete_name,
                                        FileFolderHelper.extract_filename_from_path(content_model.path),
                                        typology.title(), typology))
 

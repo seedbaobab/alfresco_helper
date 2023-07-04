@@ -40,22 +40,30 @@ class TypeController(DataController, ITypeController, ABC):
         view: TypeView = self._view
         service: TypeService = self._service
 
-        project: ProjectModel = self._pc.get_project()
-        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name)
+        project: ProjectModel = self._pc.get_project(None, False)
+        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name, False)
 
-        view.info("Creating a new type")
-        (name, title, description) = view.enter_aspect_data()
+        view.info("Creating a new type in content-model '{0}'".format(content_model.complete_name))
+        (name, title, description, parent) = view.enter_aspect_data()
 
         if self._cmfs.find_aspect(content_model, name) is not None:
             raise ApiException("There is already an aspect of the name '{0}' in the content model '{1}'."
                                .format(name, content_model.complete_name))
 
-        if self._cmfs.find_aspect(content_model, name) is not None:
+        if self._cmfs.find_type(content_model, name) is not None:
             raise ApiException("There is already a type of the name '{0}' in the content model '{1}'."
                                .format(name, content_model.complete_name))
 
+        if parent.__ne__(DataType.TYPE.value) and parent.__ne__("folder") and parent.__ne__("content"):
+            if self._cmfs.find_type(content_model, name) is None:
+                raise ApiException("There is no type named '{0}' in content model '{1}'."
+                                   .format(parent, content_model.complete_name))
+
         service.new(content_model, name, title, description)
-        view.success("Aspect '{0}' was successfully created in content model '{1}'.".format(name, content_model_name))
+        view.success("Type '{0}' was successfully created in content model '{1}'."
+                     .format(name, content_model.complete_name))
+        self.extend(content_model_name, name, parent)
+        self._pc.load()
 
     def extend(self, content_model_name: str, type_name: str, parent_type_name: str):
         """
@@ -64,8 +72,8 @@ class TypeController(DataController, ITypeController, ABC):
         :param type_name: The name of the type to extend.
         :param parent_type_name:The name of the parent type.
         """
-        project: ProjectModel = self._pc.get_project()
-        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name)
+        project: ProjectModel = self._pc.get_project(None, False)
+        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name, False)
         self._view.info("Extended type '{0}' to type '{1}'.".format(type_name, parent_type_name))
         self._extend(content_model, DataType.TYPE.value, type_name, parent_type_name)
         self._view.success("Type '{0}' was successfully extended to type '{1}'."
@@ -92,13 +100,12 @@ class TypeController(DataController, ITypeController, ABC):
 
     def _check_mandatory_aspects(self, content_model: ContentModel, source: str, complete_name: Optional[str],
                                  ancestors: list[str], mandatory: list[str]) -> list[str]:
-        # todo : Check the method
         if complete_name is None:
             mandatory.pop(0)
             return mandatory
 
         name: str = complete_name.rsplit(":", 1)[1]
-        if self._cmfs.find_aspect(content_model, name) is None:
+        if source.__ne__(name) and self._cmfs.find_aspect(content_model, name) is None:
             raise ApiException(
                 "Aspect '{0}' has a required aspect '{1}' which does not exist in content model '{2}' "
                 "in file '{3}'.".format(mandatory[len(mandatory) - 1], name, content_model.complete_name,

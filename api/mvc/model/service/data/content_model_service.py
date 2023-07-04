@@ -7,6 +7,7 @@ from api.mvc.model.data.project_model import ProjectModel
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
 from api.mvc.model.service.file.share_slingshot_app_context import ShareSlingshotApplicationContext
 from api_core.helper.file_folder_helper import FileFolderHelper
+from api_core.helper.string_helper import StringHelper
 from api_core.mvc.service.model.service import Service
 
 
@@ -28,14 +29,10 @@ class ContentModelService(Service, ABC):
             -> ContentModel:
         # Setting the absolute path to the content model file.
         filepath: str = "{0}{1}{2}".format(project.content_model_folder, os.sep,
-                                           "{0}.xml".format(name) if name.endswith("model") else
-                                           "{0}-model.xml".format(name))
-
-        # FileFolderHelper.write_file(filepath, FileFolderHelper.read_file(self.__content_model_template_filepath)
-        #                             .format(prefix=prefix, name=name, upper_case_name=name.upper()))
+                                           "{0}.xml".format(StringHelper.to_snake_case(name).lower()) if name.endswith("model") else
+                                           "{0}-model.xml".format(StringHelper.to_snake_case(name).lower()))
 
         self.__cmfs.create_content_model(filepath, prefix, name, description, author)
-
         return ContentModel(project, prefix, name, filepath)
 
     def is_prefix_exists(self, project: ProjectModel, prefix: str) -> tuple[bool, Optional[str]]:

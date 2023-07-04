@@ -125,6 +125,12 @@ class ContentModelFileService(XmlFileService):
         model.append(Comment(" Custom namespace for the '{0}:{1}' model ".format(prefix, name)))
         model.append(namespaces_node)
 
+        types: Element = Element("types")
+        aspects: Element = Element("aspects")
+
+        model.append(types)
+        model.append(aspects)
+
         # Write the XML file.
         self._write(model, content_model_file_path)
 
@@ -215,7 +221,6 @@ class ContentModelFileService(XmlFileService):
 
     def add_type(self, content_model: ContentModel, name: str, title: str, description: str):
         root: Element = self._get_root(content_model.path)
-        xmlns: str = self._extract_xmlns(root)
 
         type_node: Element = Element("type")
         type_node.set("name", "{0}:{1}".format(content_model.prefix, name))
@@ -233,13 +238,14 @@ class ContentModelFileService(XmlFileService):
         properties: Element = Element("properties")
         type_node.append(properties)
 
-        types: Element = root.find(".//{0}types".format(xmlns, content_model.prefix, type_node))
+        add_to_root: bool = False
+        types: Element = root.find(".//{0}types".format(self.get_namespace("xmlns"), content_model.prefix, type_node))
         if types is None:
-            aspects = Element("types")
-            aspects.append(type_node)
-        else:
-            types.append(type_node)
-            root.append(types)
+            types = Element("types")
+            add_to_root = True
+
+        types.append(Comment(" Definition of type '{0}'. ".format(name)))
+        types.append(type_node)
 
         self._write(root, content_model.path)
 
@@ -299,7 +305,9 @@ class ContentModelFileService(XmlFileService):
         add_parent: bool = True if parent_node is None else False
         if add_parent:
             parent_node = Element("parent")
-        parent_node.text = "{0}:{1}".format(content_model.prefix, parent.name)
+
+        parent_node.text = "{0}".format(parent.complete_name)
+
         if add_parent:
             source_node.insert(self.__get_properties_node_index(source_node), parent_node)
 
