@@ -82,8 +82,8 @@ class AspectController(DataController, IAspectController, ABC):
         """
         self._view.info("Add aspect '{0}' to the list of mandatory aspects of aspect '{1}'."
                         .format(mandatory_aspect_name, aspect_name))
-        project: ProjectModel = self._pc.get_project()
-        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name)
+        project: ProjectModel = self._pc.get_project(None, False)
+        content_model: ContentModel = self._cmc.get_content_model(project, content_model_name, False)
         self._add_mandatory(content_model, DataType.ASPECT.value, aspect_name, mandatory_aspect_name)
         self._view.success("Aspect '{0}' was successfully added to the list of required aspects for aspect '{1}'."
                            .format(mandatory_aspect_name, aspect_name))

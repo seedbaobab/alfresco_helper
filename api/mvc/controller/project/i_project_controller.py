@@ -10,10 +10,11 @@ class IProjectController(ABC):
     """
 
     @abstractmethod
-    def get_project(self, artifact_id: Optional[str] = None) -> ProjectModel:
+    def get_project(self, artifact_id: Optional[str] = None, verbose: bool = True) -> ProjectModel:
         """
         Retrieves the data model of an Alfresco AIO project.
         :param artifact_id: The artifact id of the Alfresco AIO project.
+        :param verbose: Indicates whether notification messages are displayed or not.
         :return: The data model of an Alfresco AIO project.
         """
         pass
