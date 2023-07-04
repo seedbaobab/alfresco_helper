@@ -27,9 +27,17 @@ class TypeView(View):
         """
         return self.get_input("Please enter the description value of your type")
 
-    def enter_aspect_data(self) -> tuple[str, str, str]:
+    def __get_parent(self) -> str:
+        """
+        Retrieves the value of the parent to use to generate a parent.
+        :return: The value of the parent to use to generate a parent.
+        """
+        return self.get_input("Please enter the parent value of your type ('content' or 'folder' or another type you "
+                              "have created)")
+
+    def enter_aspect_data(self) -> tuple[str, str, str, str]:
         """
         Allows the user to enter aspect data.
         :return: A tuple composed of 3 strings in this order: name, title, description.
         """
-        return self.__get_name(), self.__get_title(), self.__get_description()
+        return self.__get_name(), self.__get_title(), self.__get_description(), self.__get_parent()
