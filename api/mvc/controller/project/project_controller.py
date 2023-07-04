@@ -2,6 +2,7 @@ import os
 import re
 from typing import Optional
 
+from api.mvc.controller.aspect.i_aspect_controller import IAspectController
 from api.mvc.controller.content_model.i_content_model_controller import IContentModelController
 from api.mvc.controller.project.i_project_controller import IProjectController
 from api.mvc.model.data.project_model import ProjectModel
@@ -28,6 +29,15 @@ class ProjectController(Controller, IProjectController):
         super().__init__("project", ProjectService(), ProjectView(ConstantHelper.SCREEN_SIZE))
         self.__ps: PomService = PomService()
         self.__cmc: Optional[IContentModelController] = None
+        self.__ac: Optional[IAspectController] = None
+
+    @property
+    def aspect_controller(self) -> IAspectController:
+        return self.__ac
+
+    @aspect_controller.setter
+    def aspect_controller(self, value: IAspectController):
+        self.__ac = value
 
     @property
     def content_model_controller(self):
@@ -44,7 +54,7 @@ class ProjectController(Controller, IProjectController):
         ps: ProjectService = self._service
         pv: ProjectView = self._view
 
-        self._view.info("Creation of an Alfresco All-In-One project.")
+        self._view.info("Creation of an Alfresco All-In-One project.", True)
 
         # Retrieve and verify the data necessary for the creation of the project.
         self._view.empty()
@@ -68,6 +78,7 @@ class ProjectController(Controller, IProjectController):
 
         self._view.success("Alfresco All-In-one project '{0}.{1}' created with SDK version {2}."
                            .format(group_id, artifact_id, sdk))
+        self.raz(self.get_project(artifact_id, False))
 
     def get_project(self, artifact_id: Optional[str] = None, verbose: bool = True) -> ProjectModel:
         """
@@ -155,7 +166,7 @@ class ProjectController(Controller, IProjectController):
         """
         project: ProjectModel = self.get_project(None, False)
         service: ProjectService = self._service
-        self._view.info("Loading project {0}.".format(project.artifact_id))
+        self._view.info("Loading project '{0}'.".format(project.artifact_id))
         # Verify that the folder exists.
         if not FileFolderHelper.is_folder_exists(project.content_model_folder):
             raise ApiException("The folder that contain the content model files does not exist ({0})."
@@ -176,10 +187,27 @@ class ProjectController(Controller, IProjectController):
             self.__cmc.generate_platform_message_file(content_model)
             self.__cmc.add_content_model_in_bootstrap(project, content_model)
 
-            self.__cmc.generate_share_message_file(content_model)
+            self.__cmc.generate_share_message_file(project, content_model)
+
+        for content_model in project.content_models:
+            for aspect in content_model.aspects:
+                self.__ac.add_aspect_in_share_config_file(project, content_model, aspect)
+
+        for content_model in project.content_models:
+            for aspect in content_model.aspects:
+                self.__ac.add_aspect_properties_in_share_config_file(project, aspect)
 
     def reset(self):
-        self._view.info("Resetting project.")
+        project: ProjectModel = self.get_project(None, False)
+        self._view.info("Resetting project {0}.".format(project.artifact_id), True)
         service: ProjectService = self._service
-        service.reset(self.get_project(None, False))
-        self._view.success("The project reset was successful.")
+        service.reset(project)
+        self._view.success("Successfully reset project '{0}'.".format(project.artifact_id))
+
+    def raz(self, project: Optional[ProjectModel] = None):
+        if project is None:
+            project = self.get_project(None, False)
+        self._view.info("Complete reset of the project '{0}'.".format(project.artifact_id), True)
+        service: ProjectService = self._service
+        service.raz(project)
+        self._view.success("Complete reset of project '{0}' was completed with success.".format(project.artifact_id))

@@ -10,6 +10,7 @@ from api.mvc.model.service.file.bootstrap_service import BootstrapFileService
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
 from api.mvc.model.service.data.content_model_service import ContentModelService
 from api.mvc.controller.project.i_project_controller import IProjectController
+from api.mvc.model.service.file.share_slingshot_app_context import ShareSlingshotApplicationContext
 from api_core.helper.file_folder_helper import FileFolderHelper
 from api.mvc.view.content_model_view import ContentModelView
 from api_core.helper.constant_helper import ConstantHelper
@@ -78,6 +79,7 @@ class ContentModelController(Controller, IContentModelController, ABC):
         vw.success("The content model '{0}' has been created successfully in '{1}'."
                    .format(content_model.complete_name,
                            FileFolderHelper.extract_filename_from_path(content_model.path)))
+        self.__pc.load()
 
     def get_content_model(self, project: ProjectModel, content_model: str, verbose: bool = True) -> ContentModel:
         """
@@ -117,7 +119,9 @@ class ContentModelController(Controller, IContentModelController, ABC):
         for aspect in self.cmfs.get_aspects_name(content_model):
             content_model.add_aspect(self.__as.load_aspect(content_model, aspect))
 
-        self._view.success("Content model '{0}' was loaded successfully.".format(content_model.complete_name))
+        self._view.success("Content model '{0}' (from '{1}') was loaded successfully."
+                           .format(content_model.complete_name,
+                                   FileFolderHelper.extract_filename_from_path(content_model.path)))
         return content_model
 
     def generate_platform_message_file(self, content_model: ContentModel):
@@ -140,7 +144,22 @@ class ContentModelController(Controller, IContentModelController, ABC):
             self._view.success("Generation of message file '{0}' for content model '{1}' was successful."
                                .format(filename, content_model.complete_name))
         else:
-            self._view.success("No file generated because the content model is empty.")
+            self._view.warning("No file '{0}' generated because the content model is empty.".format(filename))
+
+    def add_share_file_message_labels(self, project: ProjectModel, content_model: ContentModel):
+        """
+        Adds the content model to the bootstrap file.
+        :param project: The content-model's project.
+        :param content_model: The content-model complete name of the Alfresco AIO project.
+        """
+        service: ContentModelService = self._service
+        destination_filename: str = FileFolderHelper.extract_filename_from_path(
+            project.share_slingshot_application_context_filepath)
+        source_filename: str = FileFolderHelper.extract_filename_from_path(content_model.share_message_file_path)
+        self._view.info("Adding message file '{0}' to file '{0}'.".format(source_filename, destination_filename))
+        service.add_share_file_message_labels(project, content_model)
+        self._view.success("Adding message file '{0}' to file '{1}' was successful."
+                           .format(source_filename, destination_filename))
 
     def add_content_model_in_bootstrap(self, project: ProjectModel, content_model: ContentModel):
         """
@@ -156,6 +175,29 @@ class ContentModelController(Controller, IContentModelController, ABC):
             self.__bfs.add_message_content_model(project, content_model)
         self._view.success(
             "Successfully added content model '{0}' to bootstrap file.".format(content_model.complete_name))
+
+    def generate_share_message_file(self, project: ProjectModel, content_model: ContentModel):
+        # File name retrieval for error message purposes.
+        filename: str = FileFolderHelper.extract_filename_from_path(content_model.share_message_file_path)
+        # Display on the output console of an appropriate message.
+        self._view.info("Generating share message file '{0}' from content model '{1}'."
+                        .format(filename, content_model.complete_name))
+        #
+        content: str = "# Content-model '{0}' ('{1}')\n\n".format(content_model.name, content_model.complete_name)
+
+        # Retrieval of aspect properties.
+        for aspect in content_model.aspects:
+            content += self.__as.get_aspect_definition_share_message_file(content_model, aspect)
+
+        # Writing file.
+        if len(content_model.aspects).__gt__(0):
+            FileFolderHelper.write_file(content_model.share_message_file_path, content)
+            self._view.success("Generating share message file '{0}' for content model '{1}' was successful."
+                               .format(filename, content_model.complete_name))
+
+            self.add_share_file_message_labels(project, content_model)
+        else:
+            self._view.warning("No file '{0}' generated because the content model is empty.".format(filename))
 
     def __is_content_model_exists(self, project: ProjectModel, prefix: str, name: str) -> tuple[bool, str]:
         """

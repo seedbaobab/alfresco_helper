@@ -75,10 +75,10 @@ class DataController(Controller, ABC):
 
         data: Optional[AspectModel | TypeModel] = None
         if data_type.__eq__(DataType.ASPECT.value):
-            data = AspectModel(name, self._cmfs.get_aspect_title(content_model, name),
+            data = AspectModel(content_model, name, self._cmfs.get_aspect_title(content_model, name),
                                self._cmfs.get_aspect_description(content_model, name))
         else:
-            data = TypeModel(name, self._cmfs.get_type_title(content_model, name),
+            data = TypeModel(content_model, name, self._cmfs.get_type_title(content_model, name),
                              self._cmfs.get_type_description(content_model, name))
 
         # Set the parent data.
@@ -252,4 +252,3 @@ class DataController(Controller, ABC):
             return True, data.name
 
         return False, None
-

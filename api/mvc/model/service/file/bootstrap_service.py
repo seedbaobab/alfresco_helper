@@ -24,7 +24,7 @@ class BootstrapFileService(XmlFileService):
         :param project: The project data model.
         """
         # Delete file.
-        FileFolderHelper.remove_file(project.bootstrap_file_path)
+        FileFolderHelper.remove_file(project.bootstrap_filepath)
         # File rewritten.
         # Creating the 'beans' node.
         beans: Element = Element("beans")
@@ -34,7 +34,7 @@ class BootstrapFileService(XmlFileService):
                                         "http://www.springframework.org/schema/beans/spring-beans-3.0.xsd")
         # Add node beans in the root.
         # Writing file.
-        self._write(beans, project.bootstrap_file_path)
+        self._write(beans, project.bootstrap_filepath)
 
     def add_content_model(self, project: ProjectModel, content_model: ContentModel):
         """
@@ -42,7 +42,7 @@ class BootstrapFileService(XmlFileService):
         :param project: The project data model.
         :param content_model: The content model's data model.
         """
-        root: Element = self._get_root(project.bootstrap_file_path)
+        root: Element = self._get_root(project.bootstrap_filepath)
 
         # Stop if the content model is already inserted.
         if self.__get_content_model(root, project, content_model, "models") is not None:
@@ -70,7 +70,7 @@ class BootstrapFileService(XmlFileService):
                     root.append(bean)
 
         # File rewritten.
-        self._write(root, project.bootstrap_file_path)
+        self._write(root, project.bootstrap_filepath)
 
     def remove_content_model(self, project: ProjectModel, content_model: ContentModel):
         """
@@ -79,7 +79,7 @@ class BootstrapFileService(XmlFileService):
         :param content_model: The content model's data model.
         """
         # Retrieval of search items.
-        root: Element = self._get_root(project.bootstrap_file_path)
+        root: Element = self._get_root(project.bootstrap_filepath)
 
         # Recovery of the node to delete. If it does not exist: stop.
         value: Element = self.__get_content_model(root, project, content_model, "models")
@@ -94,11 +94,11 @@ class BootstrapFileService(XmlFileService):
         # Remove value node.
         list_node.remove(value)
         # File rewritten.
-        self._write(root, project.bootstrap_file_path)
+        self._write(root, project.bootstrap_filepath)
 
     def add_message_content_model(self, project: ProjectModel, content_model: ContentModel):
         # Retrieval of search items.
-        root: Element = self._get_root(project.bootstrap_file_path)
+        root: Element = self._get_root(project.bootstrap_filepath)
         namespace: str = self.get_namespace("xmlns")
 
         # Verification that the 'value' node exists.
@@ -127,7 +127,7 @@ class BootstrapFileService(XmlFileService):
                     root.append(bean)
 
         # File rewritten.
-        self._write(root, project.bootstrap_file_path)
+        self._write(root, project.bootstrap_filepath)
 
     def remove_message_content_model(self, project: ProjectModel, content_model: ContentModel):
         """
@@ -136,7 +136,7 @@ class BootstrapFileService(XmlFileService):
         :param content_model: The content model's data model.
         """
         # Retrieval of search items.
-        root: Element = self._get_root(project.bootstrap_file_path)
+        root: Element = self._get_root(project.bootstrap_filepath)
 
         # Recovery of the node to delete. If it does not exist: stop.
         value: Element = self.__get_content_model(root, project, content_model, "labels")
@@ -151,7 +151,7 @@ class BootstrapFileService(XmlFileService):
         # Remove value node.
         list_node.remove(value)
         # File rewritten.
-        self._write(root, project.bootstrap_file_path)
+        self._write(root, project.bootstrap_filepath)
 
     def __get_create_list_node(self, root: Element, project: ProjectModel, property_type: str) -> tuple[bool, Element]:
         """

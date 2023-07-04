@@ -28,6 +28,8 @@ class AlfrescoHelperApi(Api, ABC):
         ppc: PropertyController = PropertyController(pc, cmc, ac, tc)
 
         pc.content_model_controller = cmc
+        pc.aspect_controller = ac
+
         cmc.aspect_controller = ac
         ac.set_property_controller(ppc)
         tc.set_property_controller(ppc)
@@ -169,6 +171,9 @@ class AlfrescoHelperApi(Api, ABC):
 
         elif command.__eq__("load"):
             controller.load()
+
+        elif command.__eq__("raz"):
+            controller.raz()
 
         # Access to the project orders manual.
         elif command.__eq__("man"):

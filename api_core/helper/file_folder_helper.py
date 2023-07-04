@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 
 from api_core.exception.api_exception import ApiException
 
@@ -105,11 +106,30 @@ class FileFolderHelper:
         """
         return [] if not FileFolderHelper.is_folder_exists(folder_path) else os.listdir(folder_path)
 
-    @classmethod
-    def remove_file(cls, filepath: str):
+    @staticmethod
+    def remove_file(filepath: str):
         """
         Delete a file.
         :param filepath: The path to the file.
         """
         if FileFolderHelper.is_file_exists(filepath):
             os.remove(filepath)
+
+    @staticmethod
+    def remove_folder(folder_path: str):
+        """
+        Delete a folder.
+        :param folder_path: The path to the folder.
+        """
+        if FileFolderHelper.is_folder_exists(folder_path):
+            shutil.rmtree(folder_path)
+
+    @staticmethod
+    def remove_content(folder_path: str):
+        if FileFolderHelper.is_folder_exists(folder_path):
+            for content in FileFolderHelper.list_folder(folder_path):
+                path: str = "{1}{0}{2}".format(os.sep, folder_path, content)
+                if os.path.isfile(path):
+                    FileFolderHelper.remove_file(path)
+                elif os.path.isdir(path):
+                    FileFolderHelper.remove_folder(path)

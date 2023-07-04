@@ -9,21 +9,19 @@ from api.mvc.controller.content_model.i_content_model_controller import IContent
 from api.mvc.controller.project.i_project_controller import IProjectController
 from api.mvc.controller.property.i_property_controller import IPropertyController
 from api.mvc.controller.type.i_type_controller import ITypeController
-from api.mvc.model.data.aspect_model import AspectModel
 from api.mvc.model.data.content_model import ContentModel
 from api.mvc.model.data.data_model import DataModel
 from api.mvc.model.data.project_model import ProjectModel
 from api.mvc.model.data.property_model import PropertyModel
-from api.mvc.model.data.type_model import TypeModel
 from api.mvc.model.service.data.property_service import PropertyService
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
+from api.mvc.model.service.file.share_config_service import ShareConfigFileService
 from api.mvc.view.property_view import PropertyView
 from api_core.exception.api_exception import ApiException
 from api_core.helper.constant_helper import ConstantHelper
 from api_core.helper.file_folder_helper import FileFolderHelper
 from api_core.helper.string_helper import StringHelper
 from api_core.mvc.controller.controller import Controller
-from api_core.mvc.view.view import View
 
 
 class PropertyController(Controller, IPropertyController, ABC):
@@ -32,6 +30,8 @@ class PropertyController(Controller, IPropertyController, ABC):
                  tc: ITypeController):
         super().__init__("property", PropertyService(), PropertyView(ConstantHelper.SCREEN_SIZE))
         self.__cmfs: ContentModelFileService = ContentModelFileService()
+        self.__scfs: ShareConfigFileService = ShareConfigFileService()
+
         self.__cmc: IContentModelController = cmc
         self.__pc: IProjectController = pc
         self.__ac: IAspectController = ac
@@ -63,6 +63,7 @@ class PropertyController(Controller, IPropertyController, ABC):
 
         service.new(content_model, data, name, title, description, typology, mandatory)
         self._view.success("Property '{0}' was successfully created.".format(data_name))
+        self.__pc.load()
 
     def load_property(self, content_model: ContentModel, data: DataModel, property_name: str) -> PropertyModel:
         """
@@ -73,13 +74,21 @@ class PropertyController(Controller, IPropertyController, ABC):
         :return: A data model for the property.
         """
         filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
-        self._view.info("Loading the property {0} from {1} {2} of content-model {3} ({4} file)"
-                        .format(property_name, data.typology, data.name, content_model.complete_name, filename))
+        self._view.info("Loading the property '{0}' from {1} {2} of content-model {3} ({4} file)"
+                        .format(property_name, data.typology, data.name, content_model.complete_name, filename), True)
         (name, title, description, typology, mandatory) = self.__cmfs.get_property(content_model, data, property_name)
-        prop: PropertyModel = PropertyModel(name, title, description, mandatory, typology)
+        prop: PropertyModel = PropertyModel(data, name, title, description, mandatory, typology)
         self._view.success("The property {0} from {1} {2} of content-model {3} ({4} file) was successfully loaded."
                            .format(property_name, data.typology, data.name, content_model.complete_name, filename))
         return prop
+
+    def add_property_in_share_config_file(self, project: ProjectModel, data: DataModel, property_model: PropertyModel):
+        service: PropertyService = self._service
+        self._view.info("Add property '{0}' (of {1} '{2}') in file 'share-config-custom.xml'."
+                        .format(property_model.complete_name, data.typology, data.complete_name), True)
+        service.add_property_in_share_config_file(project, data, property_model)
+        self._view.success("Added property '{0}' (of {1} '{2}') in 'share-config-custom.xml' file was successful."
+                           .format(property_model.complete_name, data.typology, data.complete_name))
 
     def get_property_definition_platform_message_file(self, content_model: ContentModel,
                                                       property_model: PropertyModel) -> str:
@@ -88,6 +97,14 @@ class PropertyController(Controller, IPropertyController, ABC):
             result += "{0}_{1}.property.{0}_{2}.title={3}\n"\
                 .format(content_model.prefix, StringHelper.to_camel_case(content_model.name), property_model.name,
                         property_model.title)
+        return result
+
+    def get_property_definition_share_message_file(self, content_model: ContentModel, property_model: PropertyModel) \
+            -> str:
+        result: str = ""
+        if not StringHelper.is_empty(property_model.title):
+            result += "form.field.label.{0}.{1}={2}\n".format(content_model.prefix, property_model.name,
+                                                              property_model.title)
         return result
 
     @staticmethod

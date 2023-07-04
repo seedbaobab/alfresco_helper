@@ -3,6 +3,7 @@ from typing import Optional
 
 from api.mvc.model.data.aspect_model import AspectModel
 from api.mvc.model.data.content_model import ContentModel
+from api.mvc.model.data.project_model import ProjectModel
 
 
 class IAspectController(ABC):
@@ -30,5 +31,17 @@ class IAspectController(ABC):
         """
         pass
 
+    @abstractmethod
+    def add_aspect_in_share_config_file(self, project: ProjectModel, content_model: ContentModel,
+                                        aspect: AspectModel):
+        pass
+
+    @abstractmethod
+    def add_aspect_properties_in_share_config_file(self, project: ProjectModel, aspect: AspectModel):
+        pass
+
     def get_aspect_definition_platform_message_file(self, content_model: ContentModel, aspect: AspectModel):
+        pass
+
+    def get_aspect_definition_share_message_file(self, content_model: ContentModel, aspect: AspectModel) -> str:
         pass

@@ -57,6 +57,7 @@ class AspectController(DataController, IAspectController, ABC):
 
         service.new(content_model, name, title, description)
         view.success("Aspect '{0}' was successfully created in content model '{1}'.".format(name, content_model_name))
+        self._pc.load()
 
     def extend(self, content_model_name: str, aspect_name: str, parent_aspect_name: str):
         """
@@ -105,11 +106,11 @@ class AspectController(DataController, IAspectController, ABC):
         :return: The data model of an aspect.
         """
         filename: str = FileFolderHelper.extract_filename_from_path(content_model.path)
-        self._view.info("Loading aspect '{0}' of content model '{1}' from file '{2}'."
-                        .format(name, content_model.complete_name, filename))
+        self._view.info("Loading aspect '{1}:{0}' (from file '{2}')."
+                        .format(name, content_model.prefix, filename))
         aspect = self.get_aspect(content_model, name)
-        self._view.success("Aspect '{0}' of content model '{1}' in file '{2}' was loaded successfully."
-                           .format(name, content_model.complete_name, filename))
+        self._view.success("Aspect '{1}:{0}' (from file '{2}') was loaded successfully."
+                           .format(name, content_model.prefix, filename))
         return aspect
 
     def get_aspect_definition_platform_message_file(self, content_model: ContentModel, aspect: AspectModel) -> str:
@@ -135,6 +136,26 @@ class AspectController(DataController, IAspectController, ABC):
         # If the result is not empty: add a '\n' character.
         if not StringHelper.is_empty(result):
             result += "\n"
+
+        # Return of the result.
+        return result
+
+    def get_aspect_definition_share_message_file(self, content_model: ContentModel, aspect: AspectModel) -> str:
+        result: str = ""
+        if not StringHelper.is_empty(aspect.title):
+            result += "# Label for aspect '{1}'\naspect.{0}_{1}={2}\nform.set.label.{0}.{1}={2}\n\n" \
+                .format(content_model.prefix, aspect.name, aspect.title)
+
+        properties_title: str = ""
+        if len(aspect.properties).__gt__(0):
+            properties_title = "# Labels for aspect properties '{0}'.\n".format(aspect.name)
+            for property_model in aspect.properties:
+                properties_title += self._prc.get_property_definition_share_message_file(content_model, property_model)
+
+        # If the result is not empty: add a '\n' character.
+        if not StringHelper.is_empty(properties_title):
+            properties_title += "\n"
+            result += properties_title
 
         # Return of the result.
         return result
@@ -187,6 +208,24 @@ class AspectController(DataController, IAspectController, ABC):
             self._check_mandatory_aspects(content_model, source, mandatory_aspect, ancestors, mandatory)
 
         return mandatory
+
+    def add_aspect_in_share_config_file(self, project: ProjectModel, content_model: ContentModel, aspect: AspectModel):
+        service: AspectService = self._service
+        self._view.info("Added '{0}' aspect in 'share-config-custom.xml' file.".format(aspect.name), True)
+        service.add_aspect_in_share_config_file(project, content_model, aspect)
+        self._view.success("Added aspect '{0}' in 'share-config-custom.xml' file successfully.".format(aspect.name))
+
+    def add_aspect_properties_in_share_config_file(self, project: ProjectModel, aspect: AspectModel):
+        service: AspectService = self._service
+        self._view.info("Add '{0}' properties aspect in 'share-config-custom.xml' file.".format(aspect.name),
+                        len(aspect.properties).__eq__(0))
+        if len(aspect.properties).__gt__(0):
+            service.add_properties_aspect_in_share_config_file(self._prc, project, aspect)
+            self._view.success("Added '{0}' properties aspect in 'share-config-custom.xml' file successfully."
+                               .format(aspect.complete_name))
+        else:
+            self._view.warning("No properties of aspect '{0}' have been added to the file 'share-config-custom.xml'"
+                               " because the aspect does not have any.".format(aspect.complete_name))
 
     @staticmethod
     def __check_name(value: str):

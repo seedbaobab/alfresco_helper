@@ -1,3 +1,4 @@
+import sys
 from termcolor import colored, cprint
 
 import colorama as colorama
@@ -90,8 +91,8 @@ class View:
         """
         print(self.__fill_line(" "))
 
-    def info(self, message: str):
-        self.__print_typed_message(MessageType.INFO, message)
+    def info(self, message: str, to_erase: bool = False):
+        self.__print_typed_message(MessageType.INFO, message, to_erase)
 
     def error(self, message: str):
         """
@@ -138,7 +139,7 @@ class View:
         self.separation()
         self.__print_typed_message(MessageType.END, message)
 
-    def __print_typed_message(self, message_type: MessageType, message: str):
+    def __print_typed_message(self, message_type: MessageType, message: str, to_erase: bool = False):
         """
         Print a typed message on the standard output.
         :param message_type:  The message type.
@@ -154,7 +155,10 @@ class View:
             elif message_type.value.__eq__("WARNING"):
                 print(colored("| {0} |".format(line.ljust(self.__maximum_row_width)), "light_yellow"))
             elif message_type.value.__ne__("INPUT"):
-                print("| {0} |".format(line.ljust(self.__maximum_row_width)))
+                if to_erase:
+                    print("| {0} |".format(line.ljust(self.__maximum_row_width)), end="\r")
+                else:
+                    print("| {0} |".format(line.ljust(self.__maximum_row_width)))
             else:
                 cprint("| {0}: ".format(line), "white", end='')
 

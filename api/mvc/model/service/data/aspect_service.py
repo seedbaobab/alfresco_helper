@@ -1,9 +1,12 @@
 from abc import ABC
 
+from api.mvc.controller.property.i_property_controller import IPropertyController
 from api.mvc.model.data.aspect_model import AspectModel
 from api.mvc.model.data.content_model import ContentModel
 from api.mvc.model.data.data_model import DataModel
+from api.mvc.model.data.project_model import ProjectModel
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
+from api.mvc.model.service.file.share_config_service import ShareConfigFileService
 from api_core.helper.string_helper import StringHelper
 from api_core.mvc.service.model.service import Service
 
@@ -19,6 +22,7 @@ class AspectService(Service, ABC):
         """
         super().__init__("aspect")
         self.__cmfs: ContentModelFileService = ContentModelFileService()
+        self.__scfs: ShareConfigFileService = ShareConfigFileService()
 
     def new(self, content_model: ContentModel, name: str, title: str, description: str):
         self.__cmfs.add_aspect(content_model, name, title, description)
@@ -28,6 +32,46 @@ class AspectService(Service, ABC):
 
     def mandatory(self, content_model: ContentModel, source: DataModel, mandatory: DataModel):
         self.__cmfs.add_mandatory(content_model, source, mandatory)
+
+    def add_aspect_in_share_config_file(self, project: ProjectModel, content_model: ContentModel, aspect: AspectModel):
+        self.__scfs.add_aspect_document_library(project, content_model, aspect)
+        self.__scfs.add_aspect_evaluator(project, aspect)
+        self.__scfs.add_aspect_set(project, aspect)
+        self.__add_linked_aspect(project, aspect, aspect)
+
+    def add_properties_aspect_in_share_config_file(self, property_controller: IPropertyController,
+                                                   project: ProjectModel, aspect: AspectModel):
+        for property_model in aspect.properties:
+            property_controller.add_property_in_share_config_file(project, aspect, property_model)
+
+        self.__add_linked_aspect_properties(property_controller, project, aspect, aspect)
+
+    def __add_linked_aspect_properties(self, property_controller: IPropertyController, project: ProjectModel, aspect_source: AspectModel, aspect_linked: AspectModel):
+        if aspect_linked is None:
+            return
+
+        if aspect_linked.parent is not None:
+            self.__add_linked_aspect_properties(property_controller, project, aspect_source, aspect_linked)
+
+        if aspect_source.complete_name.__ne__(aspect_linked.complete_name):
+            for property_model in aspect_linked.properties:
+                property_controller.add_property_in_share_config_file(project, aspect_source, property_model)
+
+        for mandatory in aspect_linked.mandatory:
+            self.__add_linked_aspect_properties(property_controller, project, aspect_source, mandatory)
+
+    def __add_linked_aspect(self, project: ProjectModel, aspect_source: AspectModel, aspect_linked: AspectModel):
+        if aspect_linked is None:
+            return
+
+        if aspect_linked.parent is not None:
+            self.__add_linked_aspect(project, aspect_source, aspect_linked.parent)
+
+        if aspect_source.complete_name.__ne__(aspect_linked.complete_name):
+            self.__scfs.add_parent_mandatory_data(project, aspect_source, aspect_linked)
+
+        for mandatory in aspect_linked.mandatory:
+            self.__scfs.add_parent_mandatory_data(project, aspect_source, mandatory)
 
     def init_manual(self):
         """
@@ -87,3 +131,5 @@ class AspectService(Service, ABC):
                                                                  aspect.typology, aspect.name, aspect.title)
 
         return result
+
+

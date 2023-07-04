@@ -5,6 +5,7 @@ from api.mvc.model.data.project_model import ProjectModel
 from api.mvc.model.service.file.bootstrap_service import BootstrapFileService
 from api.mvc.model.service.file.service_context_service import ServiceContextFileService
 from api.mvc.model.service.file.share_config_service import ShareConfigFileService
+from api.mvc.model.service.file.share_slingshot_app_context import ShareSlingshotApplicationContext
 from api.mvc.model.service.file.webscript_service import WebScriptFileService
 from api_core.helper.file_folder_helper import FileFolderHelper
 from api_core.mvc.service.model.service import Service
@@ -21,6 +22,7 @@ class ProjectService(Service, ABC):
         self.__wsfs: WebScriptFileService = WebScriptFileService()
         self.__scfs: ShareConfigFileService = ShareConfigFileService()
         self.__sctxtfs: ServiceContextFileService = ServiceContextFileService()
+        self.__ssac: ShareSlingshotApplicationContext = ShareSlingshotApplicationContext()
 
     @staticmethod
     def new(sdk: str, group_id: str, artifact_id: str) -> tuple[int, str, str]:
@@ -46,6 +48,7 @@ class ProjectService(Service, ABC):
         self.__bfs.reset(project)
         self.__scfs.reset(project)
         self.__wsfs.reset(project)
+        self.__ssac.reset(project)
         self.__sctxtfs.reset(project)
 
         FileFolderHelper.remove_content(project.share_message_folder)
@@ -55,6 +58,8 @@ class ProjectService(Service, ABC):
 
         FileFolderHelper.remove_folder(project.integration_tests_filepath)
         FileFolderHelper.remove_folder(project.platform_extension_folder)
+
+        FileFolderHelper.remove_content(project.platform_unit_test_folder)
 
         FileFolderHelper.remove_content(project.share_site_data_extension)
         FileFolderHelper.remove_content(project.platform_java_folder)

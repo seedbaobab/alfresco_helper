@@ -17,3 +17,9 @@ class IProjectController(ABC):
         :return: The data model of an Alfresco AIO project.
         """
         pass
+
+    def load(self):
+        """
+        Loads and generates the necessary project files.
+        """
+        pass

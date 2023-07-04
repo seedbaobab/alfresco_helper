@@ -31,7 +31,9 @@ class StringHelper:
 
     @staticmethod
     def to_camel_case(value: str) -> str:
-        result: str = re.sub(r"(_|-)+", " ", value)
+        result: str = re.sub('([A-Z]{1})', r'_\1', value)
+        result = re.sub(r"(_|-)+", " ", result)
+
         if StringHelper.has_space(result):
             result = result.title().replace(" ", "")
         # return re.sub(r"(_|-)+", " ", value).title().replace(" ", "")

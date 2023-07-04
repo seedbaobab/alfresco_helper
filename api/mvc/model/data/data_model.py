@@ -1,15 +1,19 @@
 from typing import Optional
 
 from api.mvc.model.data.data_type import DataType
+from api.mvc.model.data.i_content_model import IContentModel
+from api.mvc.model.data.i_data_model import IDataModel
 from api.mvc.model.data.property_model import PropertyModel
+from api_core.helper.string_helper import StringHelper
 
 
-class DataModel:
+class DataModel(IDataModel):
     """
     Model class for content-model's data models.
     """
 
-    def __init__(self, name: str, title: Optional[str], description: Optional[str], typology: DataType):
+    def __init__(self, icm: IContentModel, name: str, title: Optional[str], description: Optional[str],
+                 typology: DataType):
         """
         Initialize a new instance of DataModel class.
         :param name: The name of the content-model's data.
@@ -17,6 +21,7 @@ class DataModel:
         :param description: The description of the content-model's data.
         :param typology: The typology of the content-model's data.
         """
+        super().__init__(icm)
         self.__name: str = name
         self.__title: Optional[str] = title
         self.__typology: DataType = typology
@@ -62,6 +67,10 @@ class DataModel:
         return self.__typology.value
 
     @property
+    def complete_name(self):
+        return "{0}:{1}".format(self.prefix, self.__name)
+
+    @property
     def parent(self):
         return self.__parent
 
@@ -72,6 +81,14 @@ class DataModel:
     @property
     def mandatory(self):
         return self._mandatory
+
+    @property
+    def share_set_id(self):
+        return StringHelper.to_camel_case("{0}_{1}".format(self.prefix, self.__name))
+
+    @property
+    def share_label_id(self):
+        return "form.set.label.{0}.{1}".format(self.prefix, self.name)
 
     def add_property(self, property_model: PropertyModel):
         """

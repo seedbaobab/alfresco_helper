@@ -31,7 +31,7 @@ class IContentModelController(ABC):
         pass
 
     @abstractmethod
-    def generate_platform_message_file(self, content_model: ContentModel):
+    def generate_share_message_file(self, project: ProjectModel, content_model: ContentModel):
         pass
 
     @abstractmethod
@@ -41,4 +41,12 @@ class IContentModelController(ABC):
         :param project: The content-model's project.
         :param content_model: The content-model complete name of the Alfresco AIO project.
         """
+        pass
+
+    @abstractmethod
+    def generate_platform_message_file(self, content_model: ContentModel):
+        pass
+
+    @abstractmethod
+    def add_share_file_message_labels(self, project: ProjectModel, content_model: ContentModel):
         pass

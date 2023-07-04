@@ -5,6 +5,7 @@ from typing import Optional
 from api.mvc.model.data.content_model import ContentModel
 from api.mvc.model.data.project_model import ProjectModel
 from api.mvc.model.service.file.content_model_service import ContentModelFileService
+from api.mvc.model.service.file.share_slingshot_app_context import ShareSlingshotApplicationContext
 from api_core.helper.file_folder_helper import FileFolderHelper
 from api_core.mvc.service.model.service import Service
 
@@ -20,6 +21,7 @@ class ContentModelService(Service, ABC):
         """
         super().__init__("model")
         self.__cmfs: ContentModelFileService = ContentModelFileService()
+        self.__ssac: ShareSlingshotApplicationContext = ShareSlingshotApplicationContext()
         self.__content_model_template_filepath: str = "{0}{1}content_model_template".format(api_template_folder, os.sep)
 
     def new(self, project: ProjectModel, prefix: str, name: str, description: Optional[str], author: Optional[str]) \
@@ -34,7 +36,7 @@ class ContentModelService(Service, ABC):
 
         self.__cmfs.create_content_model(filepath, prefix, name, description, author)
 
-        return ContentModel(prefix, name, filepath)
+        return ContentModel(project, prefix, name, filepath)
 
     def is_prefix_exists(self, project: ProjectModel, prefix: str) -> tuple[bool, Optional[str]]:
         """
@@ -97,3 +99,6 @@ class ContentModelService(Service, ABC):
         self._ms.new_manual("new", "Create a new content model.")
         self._ms.add_call()
         self._ms.save()
+
+    def add_share_file_message_labels(self, project: ProjectModel, content_model: ContentModel):
+        self.__ssac.add_message_file_labels(project, content_model)
